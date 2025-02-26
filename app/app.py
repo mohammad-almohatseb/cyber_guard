@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.requests.request_flow import router
+from app.api.requests.request_flow import router as request_flow_router
 
 app = FastAPI(
     title="CyberGuard PTaaS",
@@ -8,7 +8,7 @@ app = FastAPI(
 )
 
 
-app.include_router(router, prefix="/api" , tags=["Request Flow"])
+app.include_router(request_flow_router, prefix="/api" , tags=["Request Flow"])
 
 @app.get("/")
 async def root():

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from schemas.base_request import RequestType
-from schemas.ip_domain_requests import WebRequest, NetworkRequest 
+from app.api.schemas.base_request import RequestType
+from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest 
 
 router = APIRouter()
 
