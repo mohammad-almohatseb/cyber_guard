@@ -1,0 +1,7 @@
+fastapi==0.115.4
+starlette==0.41.2
+alembic==1.14.1
+python-multipart==0.0.19
+requests
+pydantic[email]
+uvicorn[standard]
