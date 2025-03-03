@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient, MongoClient
 from app.api.requests.request_flow import router as request_flow_router
 
 app = FastAPI(
@@ -7,10 +8,19 @@ app = FastAPI(
     debug=True
 )
 
+MONGO_URI = "mongodb://admin:password@mongodb:27017/"
+client = MongoClient(MONGO_URI)
+db = client["cyberguard"]
 
-app.include_router(request_flow_router, prefix="/api" , tags=["Request Flow"])
+# Test Connection
+try:
+    client.admin.command("ping")
+    print("MongoDB connected successfully!")
+except Exception as e:
+    print("MongoDB connection failed:", e)
+
+app.include_router(request_flow_router, prefix="/api", tags=["Request Flow"])
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to CyberGuard PTaaS"}
-

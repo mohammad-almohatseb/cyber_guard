@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build:
@@ -8,6 +10,26 @@ services:
       - "8000:8000"
     networks:
       - app-network
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://admin:password@mongodb:27017
+
+  mongodb:
+    image: mongo:latest
+    container_name: cyberguard_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
 
 networks:
   app-network:
+
+volumes:
+  mongodb_data:

@@ -5,3 +5,5 @@ python-multipart==0.0.19
 requests
 pydantic[email]
 uvicorn[standard]
+motor
+beanie
