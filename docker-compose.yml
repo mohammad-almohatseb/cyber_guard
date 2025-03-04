@@ -26,10 +26,11 @@ services:
     volumes:
       - mongodb_data:/data/db
     networks:
-      - app-network
+      - mongo-network
 
 networks:
   app-network:
+  mongo-network:
 
 volumes:
   mongodb_data:

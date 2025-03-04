@@ -1,9 +1,9 @@
 fastapi==0.115.4
 starlette==0.41.2
-alembic==1.14.1
 python-multipart==0.0.19
 requests
+httpx==0.28.1
 pydantic[email]
 uvicorn[standard]
-motor
-beanie
+motor==3.7.0 
+beanie==1.29.0 
