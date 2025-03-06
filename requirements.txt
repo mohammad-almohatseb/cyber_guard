@@ -7,3 +7,6 @@ pydantic[email]
 uvicorn[standard]
 motor==3.7.0 
 beanie==1.29.0 
+httpx-toolkit # sudo apt install httpx-toolkit
+amass # sudo apt install amass
+subfinder # sudo apt install subfinder

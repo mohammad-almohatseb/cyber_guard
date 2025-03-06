@@ -15,6 +15,7 @@ async def select_check(request: RequestType):
 
 @router.post("/web_check")
 async def web_check(request: WebRequest):
+    target_domain = request.domain  
     return {"message": f"Performing web check on {request.domain}"}
 
 @router.post("/network_check")
