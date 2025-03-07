@@ -4,86 +4,90 @@ from app.api.requests.request_flow import target_domain
 from urllib.parse import urlparse
 import threading
 
+# List to store subdomain
+subdomains_list = []
 
-# Function to run Amass
-def run_amass(target_domain, result_list):
+# Function to run Findomain
+def run_findomain(target_domain):
     print(f"start subdomain_enumeration for {target_domain}...stage 1")
     try:
-        result = subprocess.run(['amass', 'enum', '-d', target_domain], capture_output=True, text=True, check=True)
-        result_list.extend(result.stdout.splitlines())  # Add Amass results to the list
+        result = subprocess.run(['findomain', '-t', target_domain], capture_output=True, text=True, check=True)
+        subdomains_list.extend(result.stdout.splitlines())  # Add Findomain results to the list
     except subprocess.CalledProcessError:
         print("Error running subdomain_enumeration stage 1")
 
 # Function to run Subfinder
-def run_subfinder(target_domain, result_list):
+def run_subfinder(target_domain):
     print(f"start subdomain_enumeration for {target_domain}...stage 2")
     try:
         result = subprocess.run(['subfinder', '-d', target_domain], capture_output=True, text=True, check=True)
-        result_list.extend(result.stdout.splitlines())  # Add Subfinder results to the list
+        subdomains_list.extend(result.stdout.splitlines())  # Add Subfinder results to the list
     except subprocess.CalledProcessError:
         print("Error running subdomain_enumeration stage 2")
 
+# Function to run Assetfinder
+def run_assetfinder(target_domain):
+    print(f"start subdomain_enumeration for {target_domain}...stage 3")
+    try:
+        result = subprocess.run(['assetfinder', '--subs-only', target_domain], capture_output=True, text=True, check=True)
+        subdomains_list.extend(result.stdout.splitlines())  # Add Assetfinder results to the list
+    except subprocess.CalledProcessError:
+        print("Error running subdomain_enumeration stage 3")
+
 # Function to check live subdomains using httpx-toolkit
-def check_live_subdomains(result_list, live_subdomains):
+def check_live_subdomains():
     print("Checking live subdomains using httpx-toolkit...")
     try:
-        # Save the subdomains in a temporary file for httpx-toolkit input
+        # Write the subdomains to a temporary file for httpx-toolkit to process
         with open("temp_subdomains.txt", "w") as f:
-            for subdomain in result_list:
+            for subdomain in subdomains_list:
                 f.write(f"{subdomain}\n")
 
-        # Run httpx-toolkit to filter live subdomains and capture the result
         result = subprocess.run(['httpx-toolkit', '-l', 'temp_subdomains.txt', '-mc', '200'], capture_output=True, text=True, check=True)
-
-        # Parse the live subdomains from the output
         live_subdomains_raw = result.stdout.splitlines()
 
-        # Remove protocol (http:// or https://) and store only the subdomain
+        # Print or return live subdomains
+        live_subdomains = []
         for subdomain in live_subdomains_raw:
             parsed_url = urlparse(subdomain)
-            live_subdomains.append(parsed_url.hostname)  # Add only the hostname (subdomain)
-
-        # Clean up the temporary file
+            if parsed_url.hostname:
+                live_subdomains.append(parsed_url.hostname)
+        
+        # Delete the temporary file
         subprocess.run(['rm', 'temp_subdomains.txt'])
+
+        return live_subdomains
 
     except subprocess.CalledProcessError as e:
         print(f"Error running httpx-toolkit: {e}")
+        return []
 
-# Main function to run both tools in parallel and filter duplicates
+# Main function to run all tools in parallel
 def run_subdomain_enum(target_domain):
-    # Create a shared list to store results
-    result_list = []
+    threads = []
 
-    # Create a list to store live subdomains
-    live_subdomains = []
+    # Start threads for each tool
+    threads.append(threading.Thread(target=run_findomain, args=(target_domain,)))
+    threads.append(threading.Thread(target=run_subfinder, args=(target_domain,)))
+    threads.append(threading.Thread(target=run_assetfinder, args=(target_domain,)))
 
-    # Create threads for running Amass and Subfinder concurrently
-    amass_thread = threading.Thread(target=run_amass, args=(target_domain, result_list))
-    subfinder_thread = threading.Thread(target=run_subfinder, args=(target_domain, result_list))
+    for thread in threads:
+        thread.start()
 
-    # Start both threads
-    amass_thread.start()
-    subfinder_thread.start()
+    for thread in threads:
+        thread.join()
 
-    # Wait for both threads to finish
-    amass_thread.join()
-    subfinder_thread.join()
-
-    # Filter duplicates using a set
-    unique_subdomains = set(result_list)
-
-    # Check live subdomains
-    check_live_subdomains(unique_subdomains, live_subdomains)
-
-    # Store final live subdomains in a variable
-    final_live_subdomain = live_subdomains
-
+    # Remove duplicates by converting to a set
+    unique_subdomains = set(subdomains_list)
+    
+    # Check for live subdomains
+    live_subdomains = check_live_subdomains()
+    
     # Print live subdomains
-    print(f"Live subdomains for {target_domain}:")
-    for subdomain in final_live_subdomain:
-        print(subdomain)
+    print("Live subdomains found:", live_subdomains)
 
-# Start the enumeration process
+# Run only when executed directly
 if __name__ == "__main__":
     run_subdomain_enum(target_domain)
+
 
