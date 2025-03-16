@@ -7,8 +7,4 @@ pydantic[email]
 uvicorn[standard]
 motor==3.7.0 
 beanie==1.29.0 
-httpx-toolkit==1.1.5 
-subfinder==2.6.0
-assetfinder==0.1.1
-findomain==9.0.4
 

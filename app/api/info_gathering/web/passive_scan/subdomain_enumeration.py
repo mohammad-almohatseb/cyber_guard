@@ -1,10 +1,26 @@
-import os
 import subprocess
-from app.api.requests.request_flow import target_domain  
+from app.api.requests.request_flow import target_url
 from urllib.parse import urlparse
 import threading
+import httpx  
+import asyncio
 
-# List to store subdomain
+
+# Function to parse domain from URL
+
+def get_domain_from_url(url_to_process):  # Updated argument name
+    parsed_url = urlparse(url_to_process)
+    if not parsed_url.netloc:
+        raise ValueError("Invalid URL provided")
+    return parsed_url.netloc
+
+domain = get_domain_from_url(target_url)
+print(f"Extracted domain: {domain}")
+
+
+
+
+# List to store subdomains
 subdomains_list = []
 
 # Function to run Findomain
@@ -34,33 +50,17 @@ def run_assetfinder(target_domain):
     except subprocess.CalledProcessError:
         print("Error running subdomain_enumeration stage 3")
 
-# Function to check live subdomains using httpx-toolkit
-def check_live_subdomains():
-    print("Checking live subdomains using httpx-toolkit...")
-    try:
-        # Write the subdomains to a temporary file for httpx-toolkit to process
-        with open("temp_subdomains.txt", "w") as f:
-            for subdomain in subdomains_list:
-                f.write(f"{subdomain}\n")
-
-        result = subprocess.run(['httpx-toolkit', '-l', 'temp_subdomains.txt', '-mc', '200'], capture_output=True, text=True, check=True)
-        live_subdomains_raw = result.stdout.splitlines()
-
-        # Print or return live subdomains
-        live_subdomains = []
-        for subdomain in live_subdomains_raw:
-            parsed_url = urlparse(subdomain)
-            if parsed_url.hostname:
-                live_subdomains.append(parsed_url.hostname)
-        
-        # Delete the temporary file
-        subprocess.run(['rm', 'temp_subdomains.txt'])
-
-        return live_subdomains
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error running httpx-toolkit: {e}")
-        return []
+# Function to check live subdomains using httpx
+async def check_live_subdomains(subdomains):
+    print("Checking live subdomains using httpx...")
+    live_subdomains = []
+    async with httpx.AsyncClient() as client:
+        tasks = [client.get(f"http://{subdomain}", timeout=5) for subdomain in subdomains]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        for subdomain, response in zip(subdomains, responses):
+            if isinstance(response, httpx.Response) and response.status_code == 200:
+                live_subdomains.append(subdomain)
+    return live_subdomains
 
 # Main function to run all tools in parallel
 def run_subdomain_enum(target_domain):
@@ -79,15 +79,17 @@ def run_subdomain_enum(target_domain):
 
     # Remove duplicates by converting to a set
     unique_subdomains = set(subdomains_list)
-    
-    # Check for live subdomains
-    live_subdomains = check_live_subdomains()
-    
-    # Print live subdomains
+
+    # Check for live subdomains (async call)
+    live_subdomains = asyncio.run(check_live_subdomains(unique_subdomains))
+
     print("Live subdomains found:", live_subdomains)
 
-# Run only when executed directly
 if __name__ == "__main__":
-    run_subdomain_enum(target_domain)
-
-
+    
+    parsed_domain = get_domain_from_url(target_url)
+    run_subdomain_enum(parsed_domain)
+    
+    print("Unique subdomains found:", subdomains_list)
+    
+    print("Total number of subdomains found:", len(subdomains_list))
