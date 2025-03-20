@@ -91,10 +91,10 @@ class WAFDetection(BaseModel):
     vendor: Optional[str] = None
 
 
-class WebInfoGathe(Document):
+class InfoGatheringModel(Document):
     id: Optional[PydanticObjectId] = Field(default_factory=PydanticObjectId, alias="_id")
     target: str
-    target_type: str  
+    target_type: str  # "web" or "network"
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     archives_urls: List[ArchiveURL] = []

@@ -1,3 +1,7 @@
+from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_subdomain_enum
+from app.api.models.information import InfoGatheringModel
+
+
 class InfoGather:
     def __init__(self):
         pass
@@ -5,5 +9,5 @@ class InfoGather:
     async def networkExecution(self):
         pass
         
-    async def webExecution(self):
+    async def webExecution(self) :
         pass
