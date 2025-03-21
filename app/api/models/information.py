@@ -1,52 +1,119 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Optional
 
-class cvefindings(BaseModel):
-    open_ports: List[str]
-    server_version: List[str]
-    waf_detection: List[str]
-    technologies: List[str]
-    certificate: List[str]
-    dns_info: List[str]
+from beanie import Document
+from beanie.odm.fields import PydanticObjectId
+from pydantic import BaseModel, Field
 
-class subdomainInfo(BaseModel):
+
+class ArchiveURL(BaseModel):
+    url: str
+    timestamp: Optional[str] = None
+
+
+class CertificateDetails(BaseModel):
+    issuer: Optional[str] = None
+    subject: Optional[str] = None
+    valid_from: Optional[str] = None
+    valid_to: Optional[str] = None
+
+
+class CVEDiscovery(BaseModel):
+    cve_id: str
+    description: Optional[str] = None
+    severity: Optional[str] = None
+
+
+class DirectoryEnumeration(BaseModel):
+    directory: str
+    status_code: int
+
+
+class DNSInformation(BaseModel):
+    record_type: str
+    record_value: str
+
+
+class EmailEnumeration(BaseModel):
+    email: str
+    source: Optional[str] = None
+
+
+class InternalLink(BaseModel):
+    url: str
+    anchor_text: Optional[str] = None
+
+
+class LoginPortal(BaseModel):
+    url: str
+    method: Optional[str] = None
+
+
+class OpenPort(BaseModel):
+    ip: str
+    port: int
+    service: Optional[str] = None
+
+
+class ReverseIPLookup(BaseModel):
+    ip: str
+    domains: List[str]
+
+
+class SensitiveJSFile(BaseModel):
+    url: str
+    content_snippet: Optional[str] = None
+
+
+class ServerInfo(BaseModel):
+    ip: str
+    server: Optional[str] = None
+    version: Optional[str] = None
+
+
+class Subdomain(BaseModel):
     subdomain: str
-    open_ports: List[int]
-    server_info: Dict[str, str]
-    waf_detection: str
-    reverse_ip_lookup: List[str]
-    email_enumeration: Dict[str, List[str]]
-    technologies: List[str]
-    javascript_data: Dict[str, List[str]]
-    directory_enumeration: List[str]
-    certificate_details: Dict[str, Any]
-    login_portals: List[str]
-    username_enumeration: List[str]
-    security_headers: Dict[str, Any]
-    dns_info: Dict[str, Any]
-    internal_links: List[str]
-    waybackurls: List[str]
-    cve_findings: cvefindings
+    ip: Optional[str] = None
 
 
-class DomainInfo(BaseModel):
-    target_url: str
-    subdomains: List[subdomainInfo]
-    open_ports: List[int]
-    server_info: Dict[str, str]
-    waf_detection: str
-    reverse_ip_lookup: List[str]
-    email_enumeration: Dict[str, List[str]]
-    technologies: List[str]
-    javascript_data: Dict[str, List[str]]
-    directory_enumeration: List[str]
-    certificate_details: Dict[str, Any]
-    login_portals: List[str]
-    username_enumeration: List[str]
-    security_headers: Dict[str, Any]
-    dns_info: Dict[str, Any]
-    internal_links: List[str]
-    waybackurls: List[str]
-    cve_findings: cvefindings
-    created_at: datetime = datetime.utcnow()
+class TechnologyInfo(BaseModel):
+    name: str
+    version: Optional[str] = None
+
+
+class UsernameEnumeration(BaseModel):
+    username: str
+    source: Optional[str] = None
+
+
+class WAFDetection(BaseModel):
+    detected: bool
+    vendor: Optional[str] = None
+
+
+class WebInfoGathe(Document):
+    id: Optional[PydanticObjectId] = Field(default_factory=PydanticObjectId, alias="_id")
+    target: str
+    target_type: str  
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    archives_urls: List[ArchiveURL] = []
+    certificate_details: List[CertificateDetails] = []
+    cve_discoveries: List[CVEDiscovery] = []
+    directories: List[DirectoryEnumeration] = []
+    dns_information: List[DNSInformation] = []
+    email_enumerations: List[EmailEnumeration] = []
+    internal_links: List[InternalLink] = []
+    login_portals: List[LoginPortal] = []
+    open_ports: List[OpenPort] = []
+    reverse_ip_lookups: List[ReverseIPLookup] = []
+    sensitive_js_files: List[SensitiveJSFile] = []
+    server_info: List[ServerInfo] = []
+    subdomains: List[Subdomain] = []
+    technology_info: List[TechnologyInfo] = []
+    username_enumerations: List[UsernameEnumeration] = []
+    waf_detections: List[WAFDetection] = []
+
+    class Settings:
+        # Specify the collection name
+        name = "info_gathering"

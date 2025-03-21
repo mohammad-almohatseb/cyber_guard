@@ -15,9 +15,10 @@ async def select_check(request: RequestType):
 
 @router.post("/web_check")
 async def web_check(request: WebRequest):
-    target_domain = request.domain  
+    target_url = request.domain
     return {"message": f"Performing web check on {request.domain}"}
 
 @router.post("/network_check")
 async def network_check(request: NetworkRequest):
+    target_ip_address = request.ip_address
     return {"message": f"Performing network check on {request.ip_address}"}

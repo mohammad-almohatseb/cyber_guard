@@ -2,13 +2,13 @@ import subprocess
 import asyncio
 from utils import get_domain_from_url
 from app.api.requests.request_flow import target_url
+from models.information import InfoGatheringModel, OpenPort
 
-# Extract domain
 domain = get_domain_from_url(target_url)
 print(f"Extracted domain: {domain}")
 
-# Async function to scan open ports
 async def scan_open_ports(url: str):
+    """Scans open ports using Nmap and stores the results in the database."""
     try:
         domain = get_domain_from_url(url)
 
@@ -28,7 +28,13 @@ async def scan_open_ports(url: str):
                 if len(parts) >= 3:
                     port = parts[0]
                     service = parts[2]
-                    open_ports.append({"port": port, "service": service})
+                    open_ports.append(OpenPort(port=port, service=service))
+
+        if not open_ports:
+            return {"message": "No open ports found"}
+
+        # Store results in MongoDB
+        await store_open_ports(domain, open_ports)
 
         return {
             "service": "open_ports",
@@ -45,10 +51,21 @@ async def scan_open_ports(url: str):
     except Exception as e:
         return {"error": str(e)}
 
-# Main execution
-if __name__ == "__main__":
-    parsed_domain = get_domain_from_url(target_url)
-    result = asyncio.run(scan_open_ports(parsed_domain))
+async def store_open_ports(target_domain, open_ports):
+    """Stores the open ports data in the InfoGatheringModel collection."""
+    info_gathering = await InfoGatheringModel.find_one({"target": target_domain})
 
-    print("Open ports found:", result.get("results", []))
-    print("Total number of open ports:", len(result.get("results", [])))
+    if not info_gathering:
+        info_gathering = InfoGatheringModel(
+            target=target_domain,
+            target_type="network",  # Adjust for correct categorization
+        )
+
+    # Store open ports in the database
+    info_gathering.open_ports = open_ports
+    await info_gathering.save()
+    print(f"Open ports stored in database for domain: {target_domain}")
+
+# Example usage
+if __name__ == "__main__":
+    asyncio.run(scan_open_ports(domain))
