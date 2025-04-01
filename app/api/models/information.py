@@ -91,7 +91,7 @@ class WAFDetection(BaseModel):
     vendor: Optional[str] = None
 
 
-class InfoGatheringModel(Document):
+class WebInfoGatheringModel(Document):
     id: Optional[PydanticObjectId] = Field(default_factory=PydanticObjectId, alias="_id")
     target: str
     target_type: str  # "web" or "network"
