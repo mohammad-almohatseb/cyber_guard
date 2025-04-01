@@ -2,23 +2,51 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from app.api.schemas.base_request import RequestType
 from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest 
+from app.api.info_gathering.web.passive_scan.utils import get_domain_from_url
+from app.api.info_gathering.InfoGather import InfoGather
 
 router = APIRouter()
+info_gather = InfoGather()  
 
 @router.post("/select_check")   
 async def select_check(request: RequestType):
-    if request.check_type == "web":
+    check_type = request.check_type.lower().strip()  
+    if check_type == "web":
         return JSONResponse(content={"message": "Please provide the domain"})
-    elif request.check_type == "network":
+    elif check_type == "network":
         return JSONResponse(content={"message": "Please provide the IP address"})
     raise HTTPException(status_code=400, detail="Invalid check type. Choose 'web' or 'network'")
 
 @router.post("/web_check")
 async def web_check(request: WebRequest):
-    target_url = request.domain
-    return {"message": f"Performing web check on {request.domain}"}
+    target_url = request.domain.strip()
+
+    if not target_url:
+        raise HTTPException(status_code=400, detail="Domain is required.")
+
+    try:
+        if "http" in target_url:
+            target_url = get_domain_from_url(target_url)  
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid URL format: {str(e)}")
+
+    await info_gather.webExecution(target_url)
+
+    return JSONResponse(content={
+        "message": "Web scan started. Results will be stored in MongoDB.",
+        "target_url": target_url
+    })
 
 @router.post("/network_check")
 async def network_check(request: NetworkRequest):
-    target_ip_address = request.ip_address
-    return {"message": f"Performing network check on {request.ip_address}"}
+    target_ip_address = request.ip_address.strip()
+
+    if not target_ip_address:
+        raise HTTPException(status_code=400, detail="IP address is required.")
+
+    await info_gather.networkExecution(target_ip_address)
+
+    return JSONResponse(content={
+        "message": "Network scan started. Results will be stored in MongoDB.",
+        "target_ip_address": target_ip_address
+    })
