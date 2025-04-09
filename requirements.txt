@@ -7,5 +7,6 @@ pydantic[email]
 uvicorn[standard]
 motor==3.7.0 
 beanie==1.29.0 
+dnspython==2.2.0
 
 

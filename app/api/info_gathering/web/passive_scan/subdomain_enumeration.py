@@ -64,5 +64,3 @@ async def run_subdomain_enum(domain=None) -> list:
     return live_subdomains
 
 
-if __name__ == "__main__":
-    asyncio.run(run_subdomain_enum()) 
