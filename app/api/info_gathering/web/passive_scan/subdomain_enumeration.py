@@ -1,8 +1,5 @@
 import asyncio
 import httpx
-from app.api.requests.request_flow import target_url
-from utils import get_domain_from_url
-
 
 
 async def run_tool(command):
@@ -23,6 +20,7 @@ async def run_tool(command):
         print(f"Error: {command[0]} not found. Ensure it's installed.")
         return []
 
+
 async def check_live_subdomains(subdomains):
     """Check which subdomains are live using HTTP requests."""
     live_subdomains = []
@@ -32,17 +30,16 @@ async def check_live_subdomains(subdomains):
         for subdomain, response in zip(subdomains, responses):
             if isinstance(response, httpx.Response) and response.status_code == 200:
                 live_subdomains.append(subdomain)
+            elif isinstance(response, Exception):
+                print(f"Error checking {subdomain}: {response}")
     return live_subdomains
 
-async def run_subdomain_enum(domain=None) -> list:
+
+async def run_subdomain_enum(domain: str) -> list:
     """Run subdomain enumeration asynchronously with multiple tools."""
     
-    # Use target_url if domain is not provided
-    if domain is None:
-        domain = target_url  
-
+    # Extract domain using get_domain_from_url
     try:
-        domain = get_domain_from_url(domain)  
         print(f"Extracted domain: {domain}")
     except ValueError as e:
         print(f"Error: {e}")
@@ -55,12 +52,12 @@ async def run_subdomain_enum(domain=None) -> list:
     ]
 
     results = await asyncio.gather(*(run_tool(tool) for tool in tools))
+    
     unique_subdomains = set(sub for result in results for sub in result)
+    
     live_subdomains = await check_live_subdomains(unique_subdomains)
 
     for sub in live_subdomains:
-        print(sub)
+        print(f"Live subdomain: {sub}")
 
     return live_subdomains
-
-

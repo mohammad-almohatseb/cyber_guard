@@ -1,8 +1,7 @@
-from pydantic import BaseModel, HttpUrl, IPvAnyAddress
+from pydantic import BaseModel, IPvAnyAddress, constr
 
-class WebRequest (BaseModel):
-    domain : HttpUrl
+class WebRequest(BaseModel):
+    domain: str
 
-class NetworkRequest (BaseModel):
-    ip_address : list[IPvAnyAddress]
-    
+class NetworkRequest(BaseModel):
+    ip_address: list[IPvAnyAddress]
