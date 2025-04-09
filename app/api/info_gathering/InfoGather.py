@@ -2,6 +2,7 @@ from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_su
 from app.api.info_gathering.web.passive_scan.open_ports import scan_open_ports
 from app.api.models.information import WebInfoGatheringModel
 from app.api.info_gathering.web.passive_scan.archives_urls import retrieve_archived_urls  
+from app.api.info_gathering.web.passive_scan.dns_Information import get_dns_information
 from app.config.log_middleware import LoggingMiddleware
 
 logger = LoggingMiddleware()
@@ -20,12 +21,15 @@ class InfoGather:
         
         archive_urls = await retrieve_archived_urls(subdomains)
         
+        dns_info = await get_dns_information()  
+        
         info_gathering = WebInfoGatheringModel(
             target=domain,
             target_type="web",  
             subdomains=[{"subdomain": sub} for sub in subdomains],  
             open_ports=open_ports_result.get("results", []),  
-            archived_urls=archive_urls  
+            archived_urls=archive_urls,  
+            dns_info= dns_info
         )
 
         await info_gathering.save() 

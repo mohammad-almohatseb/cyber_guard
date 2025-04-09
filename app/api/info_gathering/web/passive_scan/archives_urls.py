@@ -1,6 +1,5 @@
 import subprocess
 import re
-import asyncio
 from app.api.requests.request_flow import target_url  
 from utils import get_domain_from_url
 from app.config.log_middleware import LoggingMiddleware
