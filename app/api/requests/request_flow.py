@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from app.api.schemas.base_request import RequestType
 from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest 
-from app.api.info_gathering.web.passive_scan.utils import get_domain_from_url
 from app.api.info_gathering.InfoGather import InfoGather
 
 router = APIRouter()
@@ -19,22 +18,16 @@ async def select_check(request: RequestType):
 
 @router.post("/web_check")
 async def web_check(request: WebRequest):
-    target_url = request.domain.strip()
+    target_domain = request.domain.strip()
 
-    if not target_url:
+    if not target_domain:
         raise HTTPException(status_code=400, detail="Domain is required.")
 
-    try:
-        if "http" in target_url:
-            target_url = get_domain_from_url(target_url)  
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid URL format: {str(e)}")
-
-    await info_gather.webExecution(target_url)
+    await info_gather.webExecution(target_domain)
 
     return JSONResponse(content={
         "message": "Web scan started. Results will be stored in MongoDB.",
-        "target_url": target_url
+        "domain": target_domain
     })
 
 @router.post("/network_check")

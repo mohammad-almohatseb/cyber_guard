@@ -1,36 +1,29 @@
 from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_subdomain_enum
 from app.api.info_gathering.web.passive_scan.open_ports import scan_open_ports
 from app.api.models.information import WebInfoGatheringModel
-from app.api.info_gathering.web.passive_scan.archives_urls import retrieve_archived_urls  
-from app.api.info_gathering.web.passive_scan.dns_Information import get_dns_information
-from app.config.log_middleware import LoggingMiddleware
 
-logger = LoggingMiddleware()
 
 class InfoGather:
     def __init__(self):
         pass
     
-    async def networkExecution(self):
+    async def networkExecution(self, ip_address: str):
         pass
         
     async def webExecution(self, domain: str):
         subdomains = await run_subdomain_enum(domain)
-        
+        if not subdomains:
+            return
+
         open_ports_result = await scan_open_ports(domain)
-        
-        archive_urls = await retrieve_archived_urls(subdomains)
-        
-        dns_info = await get_dns_information()  
-        
+
+
         info_gathering = WebInfoGatheringModel(
             target=domain,
             target_type="web",  
             subdomains=[{"subdomain": sub} for sub in subdomains],  
-            open_ports=open_ports_result.get("results", []),  
-            archived_urls=archive_urls,  
-            dns_info= dns_info
+            open_ports=open_ports_result.get("results", []),    
+        
         )
 
         await info_gathering.save() 
-        logger.info(f"Document for {domain} saved to MongoDB.")

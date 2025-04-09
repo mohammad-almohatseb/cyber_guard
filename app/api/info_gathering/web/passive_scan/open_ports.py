@@ -1,16 +1,8 @@
 import subprocess
-import asyncio
-from utils import get_domain_from_url
-from app.api.requests.request_flow import target_url
 
-domain = get_domain_from_url(target_url)
-print(f"Extracted domain: {domain}")
-
-async def scan_open_ports(url: str):
+async def scan_open_ports(domain: str):
     """Scans open ports using Nmap and stores the results in a list."""
     try:
-        domain = get_domain_from_url(url)
-
         result = subprocess.run(
             ["nmap", "-p-", "--open", "-T4", "-Pn", domain],
             capture_output=True,
@@ -19,7 +11,7 @@ async def scan_open_ports(url: str):
         )
 
         output = result.stdout
-        open_ports = []  # Storing the final results here
+        open_ports = []
 
         for line in output.splitlines():
             if "open" in line:
