@@ -50,8 +50,7 @@ class LoginPortal(BaseModel):
 
 
 class OpenPort(BaseModel):
-    ip: str
-    port: int
+    port: str  
     service: Optional[str] = None
 
 

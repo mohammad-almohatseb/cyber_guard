@@ -27,11 +27,16 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     VIRTUAL_ENV="/opt/venv"
 
+# 🔧 Install nmap here!
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nmap && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
 # Copy application files
 COPY . .
 
-# Set the default command to run the application
+# Run the app
 CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
