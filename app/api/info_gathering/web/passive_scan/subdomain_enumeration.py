@@ -1,5 +1,9 @@
 import asyncio
 import httpx
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def run_tool(command):
@@ -14,10 +18,10 @@ async def run_tool(command):
         if process.returncode == 0:
             return stdout.decode().splitlines()
         else:
-            print(f"Error running {command[0]}: {stderr.decode()}")
+            logger.warning(f"Error running {command[0]}: {stderr.decode().strip()}")
             return []
     except FileNotFoundError:
-        print(f"Error: {command[0]} not found. Ensure it's installed.")
+        logger.error(f"{command[0]} not found. Make sure it's installed and in your PATH.")
         return []
 
 
@@ -25,25 +29,20 @@ async def check_live_subdomains(subdomains):
     """Check which subdomains are live using HTTP requests."""
     live_subdomains = []
     async with httpx.AsyncClient() as client:
-        tasks = [client.get(f"http://{subdomain}", timeout=5) for subdomain in subdomains]
+        tasks = [client.get(f"http://{sub}", timeout=5) for sub in subdomains]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         for subdomain, response in zip(subdomains, responses):
             if isinstance(response, httpx.Response) and response.status_code == 200:
                 live_subdomains.append(subdomain)
             elif isinstance(response, Exception):
-                print(f"Error checking {subdomain}: {response}")
+                logger.debug(f"Error checking {subdomain}: {response}")
     return live_subdomains
 
 
 async def run_subdomain_enum(domain: str) -> list:
-    """Run subdomain enumeration asynchronously with multiple tools."""
-    
-    # Extract domain using get_domain_from_url
-    try:
-        print(f"Extracted domain: {domain}")
-    except ValueError as e:
-        print(f"Error: {e}")
-        return []
+    """Run subdomain enumeration asynchronously and return only live subdomains."""
+    domain = domain.strip().lower().lstrip("www.")
+    logger.info(f"Starting subdomain enumeration for: {domain}")
 
     tools = [
         ['findomain', '-t', domain],
@@ -52,12 +51,14 @@ async def run_subdomain_enum(domain: str) -> list:
     ]
 
     results = await asyncio.gather(*(run_tool(tool) for tool in tools))
-    
-    unique_subdomains = set(sub for result in results for sub in result)
-    
-    live_subdomains = await check_live_subdomains(unique_subdomains)
+    all_subdomains = set(sub for result in results for sub in result if sub.endswith(domain))
 
+    logger.info(f"Discovered {len(all_subdomains)} unique subdomains (before live check).")
+
+    live_subdomains = await check_live_subdomains(all_subdomains)
+
+    logger.info(f"{len(live_subdomains)} live subdomains found.")
     for sub in live_subdomains:
-        print(f"Live subdomain: {sub}")
+        logger.info(f" - {sub}")
 
     return live_subdomains
