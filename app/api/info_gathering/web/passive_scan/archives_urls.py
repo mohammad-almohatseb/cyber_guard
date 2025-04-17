@@ -26,7 +26,7 @@ def is_redirect_url(url):
 
 def enumerate_urls(subdomain_list):
    
-    login_pages = []
+    login_portals = []
     sensitive_js_files = []
     injectable_urls = []
     redirect_urls = []
@@ -39,7 +39,7 @@ def enumerate_urls(subdomain_list):
                 urls = result.stdout.strip().split('\n')
                 for url in urls:
                     if is_login_url(url):
-                        login_pages.append(url)
+                        login_portals.append(url)
                     if is_sensitive_js(url):
                         sensitive_js_files.append(url)
                     if is_injectable_url(url):
@@ -54,11 +54,11 @@ def enumerate_urls(subdomain_list):
             logger.error(f"[waybackurls] Exception while scanning {sub}: {e}")
 
     logger.info(f"[waybackurls] Finished scanning all subdomains.")
-    logger.info(f"[summary] Login Pages: {len(login_pages)}")
+    logger.info(f"[summary] Login Pages: {len(login_portals)}")
     logger.info(f"[summary] Sensitive JS Files: {len(sensitive_js_files)}")
     logger.info(f"[summary] Injectable URLs: {len(injectable_urls)}")
     logger.info(f"[summary] Redirect URLs: {len(redirect_urls)}")
 
-    return login_pages, sensitive_js_files, injectable_urls, redirect_urls
+    return login_portals, sensitive_js_files, injectable_urls, redirect_urls
 
-login_pages, js_files, injectable_urls, redirect_urls = enumerate_urls(subdomain_list)
+login_portals, sensitive_js_files, injectable_urls, redirect_urls = enumerate_urls(subdomain_list)

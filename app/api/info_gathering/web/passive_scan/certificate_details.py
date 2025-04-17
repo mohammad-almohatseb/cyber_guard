@@ -54,14 +54,14 @@ def check_tls(subdomain, timeout=5):
 subdomain_list = subdomains
 
 
-tls_info = []
+certificate_details = []
 
 for sub in subdomain_list:
     result = check_tls(sub)
-    tls_info.append(result)
+    certificate_details.append(result)
 
 
-for info in tls_info:
+for info in certificate_details:
     if info['has_tls']:
         print(f"Subdomain: {info['subdomain']} has TLS.")
         print(f"  ➔ Start Date: {info['start_date']}")
