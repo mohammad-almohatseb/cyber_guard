@@ -29,7 +29,7 @@ async def check_live_subdomains(subdomains):
     """Check which subdomains are live using HTTP requests."""
     live_subdomains = []
     async with httpx.AsyncClient() as client:
-        tasks = [client.get(f"http://{sub}", timeout=5) for sub in subdomains]
+        tasks = [client.get(f"http://{sub}", timeout=20) for sub in subdomains]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         for subdomain, response in zip(subdomains, responses):
             if isinstance(response, httpx.Response) and response.status_code == 200:
