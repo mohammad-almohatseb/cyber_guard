@@ -27,10 +27,23 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     VIRTUAL_ENV="/opt/venv"
 
-# 🔧 Install nmap here!
 RUN apt-get update && \
     apt-get install -y --no-install-recommends nmap && \
     rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    ca-certificates \
+    golang-go \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install waybackurls
+RUN go install github.com/tomnomnom/waybackurls@latest
+
+# Add Go bin to PATH
+ENV PATH="/root/go/bin:${PATH}"
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
