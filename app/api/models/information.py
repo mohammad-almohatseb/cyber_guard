@@ -17,13 +17,14 @@ class WebInfoGatheringModel(Document):
     cve_discoveries: Optional[List] = None
     directories: Optional[List[str]] = None
     email_enumerations: Optional[List] = None
-    internal_links: Optional[List] = None
     open_ports: Optional[List] = None
     server_info: Optional[List] = None
     subdomains: Optional[List] = None
     technology_info: Optional[List] = None
     username_enumerations: Optional[List] = None
     waf_detections: Optional[List] = None
+    https_headers: Optional[List[dict]] = None
+
 
     class Settings:
         name = "info_gathering"
