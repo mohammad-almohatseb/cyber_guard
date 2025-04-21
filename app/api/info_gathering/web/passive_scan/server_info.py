@@ -19,7 +19,7 @@ async def fetch_server_header(session, subdomain):
         return subdomain, ""
 
 
-def parse_server_info(server_header: str):
+async def parse_server_info(server_header: str):
     if not server_header:
         return ("Unknown", "Unknown")
 
@@ -30,7 +30,7 @@ def parse_server_info(server_header: str):
         return server_header, "Unknown"
 
 
-def guess_os(server: str):
+async def guess_os(server: str):
     server = server.lower()
     if "win" in server:
         return "Windows"
