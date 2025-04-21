@@ -3,6 +3,7 @@ from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_su
 from app.api.info_gathering.web.passive_scan.open_ports import run_open_ports  
 from app.api.info_gathering.web.passive_scan.archives_urls import enumerate_urls
 from app.api.info_gathering.web.passive_scan.certificate_details import enumerate_certificates
+from app.api.info_gathering.web.passive_scan.directory_enumeration import enum_dir_on_subdomains
 from app.api.models.information import WebInfoGatheringModel
 
 logger = logging.getLogger(__name__)
@@ -24,33 +25,41 @@ class InfoGather:
             logger.warning(f"[InfoGather] No subdomains found for {domain}")
             return {"status": "no_subdomains", "domain": domain}
 
-
+        subdomains_result.append(domain)
 
 # open ports
-        open_ports_result = await run_open_ports(domain)  
-        if isinstance(open_ports_result, dict) and "error" in open_ports_result:
-            logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
-            open_ports_data = []
-        else:
-            open_ports_data = open_ports_result   
+        # open_ports_result = await run_open_ports(domain)  
+        # if isinstance(open_ports_result, dict) and "error" in open_ports_result:
+        #     logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
+        #     open_ports_data = []
+        # else:
+        #     open_ports_data = open_ports_result   
             
 #archive urls        
-        archieve_urls_result = await enumerate_urls(subdomains_result)
+        # archieve_urls_result = await enumerate_urls(subdomains_result)
 
 
 
 
 #certificate details
 
-        certificate_details_result= await enumerate_certificates(subdomains_result)
+        # certificate_details_result= await enumerate_certificates(subdomains_result)
+
+
+
+
+#dir
+        enum_dir_on_subdomains_result= await enum_dir_on_subdomains(subdomains_result)
+
         
         info_gathering = WebInfoGatheringModel(
             target=domain,
             target_type="web",
             subdomains=subdomains_result,
-            open_ports=open_ports_result,
-            archive_urls=archieve_urls_result,
-            certificate_details=certificate_details_result,
+            # open_ports=open_ports_result,
+            # archive_urls=archieve_urls_result,
+            # certificate_details=certificate_details_result,
+            directories=enum_dir_on_subdomains_result,
         )
 
         await info_gathering.save()
