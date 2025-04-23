@@ -35,7 +35,7 @@ class InfoGather:
              open_ports_data = open_ports_result   
             
 #archive urls        
-        archieve_urls_result = await enumerate_urls(subdomains_result)
+        archieve_urls_result = await enumerate_urls([domain])
 
 
 
