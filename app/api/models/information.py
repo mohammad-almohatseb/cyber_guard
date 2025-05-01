@@ -23,6 +23,7 @@ class WebInfoGatheringModel(Document):
     technology_info: Optional[List] = None
     username_enumerations: Optional[List] = None
     waf_detections: Optional[List] = None
+    input_validation: Optional[List] = None
     https_headers: Optional[List[dict]] = None
 
 
