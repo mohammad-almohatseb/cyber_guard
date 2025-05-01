@@ -3,6 +3,8 @@ from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_su
 from app.api.info_gathering.web.passive_scan.open_ports import run_open_ports  
 from app.api.info_gathering.web.passive_scan.archives_urls import enumerate_urls
 from app.api.info_gathering.web.passive_scan.certificate_details import enumerate_certificates
+from app.api.info_gathering.web.passive_scan.technology_info import gather_tech_info
+from app.api.info_gathering.web.active_scan.input_validation import scan_input_validation
 from app.api.models.information import WebInfoGatheringModel
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ class InfoGather:
 
 
 
-# open ports
+# # open ports
         open_ports_result = await run_open_ports(domain)  
         if isinstance(open_ports_result, dict) and "error" in open_ports_result:
             logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
@@ -35,14 +37,23 @@ class InfoGather:
             open_ports_data = open_ports_result   
             
 #archive urls        
-        archieve_urls_result = await enumerate_urls(subdomains_result)
+        archieve_urls_result = await enumerate_urls([domain])
 
 
 
 
-#certificate details
+# #certificate details
 
         certificate_details_result= await enumerate_certificates(subdomains_result)
+        
+        
+#technology info
+        technology_info_result =  gather_tech_info( domain, subdomains_result)
+
+#Input validation
+        all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
+        all_injectables = [url for sublist in all_injectables_nested for url in sublist]
+        input_validation_result = await scan_input_validation(all_injectables)
         
         info_gathering = WebInfoGatheringModel(
             target=domain,
@@ -51,9 +62,12 @@ class InfoGather:
             open_ports=open_ports_result,
             archive_urls=archieve_urls_result,
             certificate_details=certificate_details_result,
+            technology_info=technology_info_result,
+            input_validation=input_validation_result
         )
 
         await info_gathering.save()
         logger.info(f"[InfoGather] Web info gathering saved for {domain}")
 
         return {"status": "success", "domain": domain}
+    

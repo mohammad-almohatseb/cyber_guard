@@ -8,5 +8,10 @@ uvicorn[standard]
 motor==3.7.0 
 beanie==1.29.0 
 dnspython==2.2.0
+jsbeautifier==1.15.4
+tldextract==3.4.0
+beautifulsoup4==4.12.3
+
+
 
 

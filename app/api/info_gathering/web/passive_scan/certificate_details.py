@@ -22,7 +22,7 @@ def fetch_tls_certificate(subdomain: str, timeout: int = 5) -> dict:
 
         issuer_name = next(
             (attr_value for item in cert.get('issuer', [])
-             for attr_name, attr_value in item if attr_name == 'organizationName'),
+            for attr_name, attr_value in item if attr_name == 'organizationName'),
             'Unknown'
         )
 

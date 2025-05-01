@@ -1,55 +1,69 @@
-# Stage 1: Build
-FROM python:3.12-slim AS builder
+# -----------------------
+# Stage 1: Python Builder
+# -----------------------
+    FROM python:3.12-slim AS builder
 
-WORKDIR /app
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-dev libpq-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Stage 2: Runtime
-FROM python:3.12-slim AS runtime
-
-WORKDIR /app
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/opt/venv/bin:$PATH" \
-    VIRTUAL_ENV="/opt/venv"
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends nmap && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    ca-certificates \
-    golang-go \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install waybackurls
-RUN go install github.com/tomnomnom/waybackurls@latest
-
-# Add Go bin to PATH
-ENV PATH="/root/go/bin:${PATH}"
-
-# Copy virtual environment from builder stage
-COPY --from=builder /opt/venv /opt/venv
-
-# Copy application files
-COPY . .
-
-# Run the app
-CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    WORKDIR /app
+    
+    # Environment
+    ENV PYTHONUNBUFFERED=1 \
+        PYTHONDONTWRITEBYTECODE=1
+    
+    # Install build dependencies
+    RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+        gcc \
+        python3-dev \
+        libpq-dev && \
+        rm -rf /var/lib/apt/lists/*
+    
+    # Create virtual environment
+    RUN python -m venv /opt/venv
+    ENV PATH="/opt/venv/bin:$PATH"
+    
+    # Install Python dependencies
+    COPY requirements.txt .
+    RUN pip install --no-cache-dir --upgrade pip && \
+        pip install --no-cache-dir -r requirements.txt
+    
+    # -----------------------
+    # Stage 2: Runtime Image
+    # -----------------------
+    FROM python:3.12-slim AS runtime
+    
+    WORKDIR /app
+    
+    # Environment
+    ENV PYTHONUNBUFFERED=1 \
+        PYTHONDONTWRITEBYTECODE=1 \
+        VIRTUAL_ENV="/opt/venv" \
+        PATH="/opt/venv/bin:/root/go/bin:$PATH"
+    
+    # Install runtime tools & dependencies
+    RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+        nmap \
+        curl \
+        git \
+        golang-go \
+        ca-certificates \
+        libyaml-dev \
+        ruby \
+        ruby-dev \
+        build-essential && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*
+    
+    # ✅ Install Go tools
+    RUN go install github.com/lc/gau@latest && \
+        go install github.com/tomnomnom/waybackurls@latest
+    
+    # ✅ Copy Python virtual environment from builder
+    COPY --from=builder /opt/venv /opt/venv
+    
+    # ✅ Copy application source code
+    COPY . .
+    
+    # ✅ Start FastAPI app with Uvicorn
+    CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    
