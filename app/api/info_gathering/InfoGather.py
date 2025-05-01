@@ -26,15 +26,15 @@ class InfoGather:
             logger.warning(f"[InfoGather] No subdomains found for {domain}")
             return {"status": "no_subdomains", "domain": domain}
 
-
+        subdomains_result.append(domain)
 
 # # open ports
         open_ports_result = await run_open_ports(domain)  
         if isinstance(open_ports_result, dict) and "error" in open_ports_result:
-            logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
-            open_ports_data = []
+             logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
+             open_ports_data = []
         else:
-            open_ports_data = open_ports_result   
+             open_ports_data = open_ports_result   
             
 #archive urls        
         archieve_urls_result = await enumerate_urls([domain])
@@ -45,6 +45,8 @@ class InfoGather:
 # #certificate details
 
         certificate_details_result= await enumerate_certificates(subdomains_result)
+
+
         
         
 #technology info

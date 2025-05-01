@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, List, Optional
+from typing import Optional, Dict, List
 
 from beanie import Document
 from beanie.odm.fields import PydanticObjectId
@@ -14,9 +15,8 @@ class WebInfoGatheringModel(Document):
     archive_urls: Optional[List] = None
     certificate_details: Optional[List] = None
     cve_discoveries: Optional[List] = None
-    directories: Optional[List] = None
+    directories: Optional[List[str]] = None
     email_enumerations: Optional[List] = None
-    internal_links: Optional[List] = None
     open_ports: Optional[List] = None
     server_info: Optional[List] = None
     subdomains: Optional[List] = None
@@ -24,6 +24,8 @@ class WebInfoGatheringModel(Document):
     username_enumerations: Optional[List] = None
     waf_detections: Optional[List] = None
     input_validation: Optional[List] = None
+    https_headers: Optional[List[dict]] = None
+
 
     class Settings:
         name = "info_gathering"
