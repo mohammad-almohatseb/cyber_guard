@@ -29,3 +29,6 @@ class WebInfoGatheringModel(Document):
 
     class Settings:
         name = "info_gathering"
+
+
+        

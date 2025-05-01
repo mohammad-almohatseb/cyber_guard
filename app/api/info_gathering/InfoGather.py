@@ -4,7 +4,11 @@ from app.api.info_gathering.web.passive_scan.open_ports import run_open_ports
 from app.api.info_gathering.web.passive_scan.archives_urls import enumerate_urls
 from app.api.info_gathering.web.passive_scan.certificate_details import enumerate_certificates
 from app.api.info_gathering.web.passive_scan.technology_info import gather_tech_info
+from app.api.info_gathering.web.passive_scan.directory_enumeration import enum_dir_on_subdomains
+from app.api.info_gathering.web.passive_scan.server_info import final_result
 from app.api.info_gathering.web.active_scan.input_validation import scan_input_validation
+from app.api.info_gathering.web.active_scan.http_headers import scan_https_headers
+from app.api.info_gathering.web.active_scan.waf_detection import enumerate_waf
 from app.api.models.information import WebInfoGatheringModel
 
 logger = logging.getLogger(__name__)
@@ -21,6 +25,7 @@ class InfoGather:
         logger.info(f"[InfoGather] Starting web scan for {domain}")
 
 # subdomain enumeration
+
         subdomains_result = await run_subdomain_enum(domain)
         if not subdomains_result:
             logger.warning(f"[InfoGather] No subdomains found for {domain}")
@@ -28,34 +33,60 @@ class InfoGather:
 
         subdomains_result.append(domain)
 
-# # open ports
+
+# open ports
+
         open_ports_result = await run_open_ports(domain)  
         if isinstance(open_ports_result, dict) and "error" in open_ports_result:
              logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
              open_ports_data = []
         else:
              open_ports_data = open_ports_result   
-            
-#archive urls        
+
+
+# archive urls 
+       
         archieve_urls_result = await enumerate_urls([domain])
 
 
-
-
-# #certificate details
+# certificate details
 
         certificate_details_result= await enumerate_certificates(subdomains_result)
 
+    
+# technology info
 
-        
-        
-#technology info
         technology_info_result =  gather_tech_info( domain, subdomains_result)
 
-#Input validation
+
+# directory enumeration
+
+        directories_enum_result = await enum_dir_on_subdomains(subdomains_result)
+
+
+# server info
+
+        server_info_result =await final_result(subdomains_result)
+
+
+# Input validation
+
         all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
         all_injectables = [url for sublist in all_injectables_nested for url in sublist]
         input_validation_result = await scan_input_validation(all_injectables)
+
+
+# https headers
+  
+        https_headers_result = await scan_https_headers(subdomains_result)
+
+
+# waf detection
+
+        waf_detections_result = await enumerate_waf(subdomains_result)
+
+
+# add to DB
         
         info_gathering = WebInfoGatheringModel(
             target=domain,
@@ -64,8 +95,13 @@ class InfoGather:
             open_ports=open_ports_result,
             archive_urls=archieve_urls_result,
             certificate_details=certificate_details_result,
+            directories=directories_enum_result,
+            server_info=server_info_result,
             technology_info=technology_info_result,
-            input_validation=input_validation_result
+            https_headers=https_headers_result,
+            input_validation=input_validation_result,
+            waf_detections=waf_detections_result,
+
         )
 
         await info_gathering.save()

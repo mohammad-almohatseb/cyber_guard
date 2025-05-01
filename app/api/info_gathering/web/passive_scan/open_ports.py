@@ -34,11 +34,10 @@ async def run_open_ports(domain: str):
 
         return open_ports
 
-    except ValueError as e:
-        return {"error": str(e)}
-    except subprocess.CalledProcessError:
-        return {"error": "Nmap scan failed"}
     except subprocess.TimeoutExpired:
-        return {"error": "Nmap scan timed out"}
+        logger.error(f"[open_ports] Nmap scan timed out for {domain}")
+        return []  # Return empty list instead of dict
+
     except Exception as e:
-        return {"error": str(e)}
+        logger.error(f"[open_ports] Unexpected error for {domain}: {e}")
+        return []  # Return empty list instead of dict

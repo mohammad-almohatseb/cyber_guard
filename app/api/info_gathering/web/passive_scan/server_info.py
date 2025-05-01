@@ -53,8 +53,8 @@ async def fetch_cves(product: str, version: str):
 
 async def scan_subdomain(session, subdomain):
     sub, server_header = await fetch_server_header(session, subdomain)
-    product, version = parse_server_info(server_header)
-    os_guess = guess_os(server_header)
+    product, version = await parse_server_info(server_header)
+    os_guess = await guess_os(server_header)
     cve_url = await fetch_cves(product, version)
 
     return {
