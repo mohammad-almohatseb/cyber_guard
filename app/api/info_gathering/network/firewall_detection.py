@@ -4,8 +4,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def check_firewall(host):
-    logger.info(f"[nmap] Checking firewall status on host: {host}")
+async def check_firewall(host: str) -> list[dict]:
+    logger.info(f"[Firewall Check] Checking firewall status on host: {host}")
     firewall_detected = False
 
     try:
@@ -18,25 +18,41 @@ async def check_firewall(host):
         try:
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=60)
         except asyncio.TimeoutError:
-            logger.error(f"[nmap] Timeout during firewall detection on {host}")
+            logger.error(f"[Firewall Check] Timeout during firewall detection on {host}")
             process.kill()
-            return f"{host}: False"
+            return [{'host': host, 'firewall_detected': None, 'error': 'Timeout'}]
 
         if process.returncode == 0:
             output = stdout.decode()
             if "filtered" in output:
                 firewall_detected = True
-                logger.info(f"[nmap] Firewall detected on {host}")
+                logger.info(f"[Firewall Check] Firewall detected on {host}")
             else:
-                logger.info(f"[nmap] No firewall detected on {host}")
+                logger.info(f"[Firewall Check] No firewall detected on {host}")
         else:
-            logger.warning(f"[nmap] Nmap error during firewall scan on {host}: {stderr.decode().strip()}")
+            error_msg = stderr.decode().strip()
+            logger.warning(f"[Firewall Check] Nmap error on {host}: {error_msg}")
+            return [{'host': host, 'firewall_detected': None, 'error': error_msg}]
     except Exception as e:
-        logger.error(f"[nmap] Exception occurred while checking firewall on {host}: {e}")
-    
-    return f"{host}: {firewall_detected}"
+        logger.error(f"[Firewall Check] Exception occurred on {host}: {e}")
+        return [{'host': host, 'firewall_detected': None, 'error': str(e)}]
 
-async def scan_hosts(host_list):
-    tasks = [check_firewall(host) for host in host_list]
-    return await asyncio.gather(*tasks)
+    return [{'host': host, 'firewall_detected': firewall_detected, 'error': None}]
 
+
+async def enumerate_firewalls(hosts: list[str]) -> list[dict]:
+    tasks = [check_firewall(host) for host in hosts]
+    results = await asyncio.gather(*tasks)
+
+    # Flatten list of lists
+    flat_results = [item for sublist in results for item in sublist]
+
+    for res in flat_results:
+        if res["firewall_detected"]:
+            logger.info(f" Host: {res['host']} has a firewall.")
+        elif res["firewall_detected"] is False:
+            logger.info(f" Host: {res['host']} does not have a firewall.")
+        else:
+            logger.warning(f" Host: {res['host']} could not be checked due to error: {res['error']}")
+
+    return flat_results
