@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from beanie import init_beanie
 from app.api.models.information import WebInfoGatheringModel  
+from app.api.models.information import NetworkInfoGathering
 from fastapi import FastAPI
 from motor import motor_asyncio
 import logging
@@ -20,7 +21,8 @@ class MongoDB:
             await init_beanie(
                 database=db,
                 document_models=[
-                    WebInfoGatheringModel
+                    WebInfoGatheringModel,
+                    NetworkInfoGathering,
                 ]
             )
         except Exception as e:

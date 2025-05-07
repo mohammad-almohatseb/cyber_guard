@@ -29,6 +29,16 @@ class WebInfoGatheringModel(Document):
 
     class Settings:
         name = "info_gathering"
+        
+        
+class NetworkInfoGathering(Document):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    alive_hosts: Optional[List] = None
+    firewall_info: Optional[List] = None
+    detected_services: Optional[List] = None
+    os_detection: Optional[List] = None
 
+    class Settings:
+        name = "network_info_gathering"
 
         

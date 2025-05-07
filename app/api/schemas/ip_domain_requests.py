@@ -4,4 +4,4 @@ class WebRequest(BaseModel):
     domain: str
 
 class NetworkRequest(BaseModel):
-    ip_address: list[IPvAnyAddress]
+    ip_address: str
