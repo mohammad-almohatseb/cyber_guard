@@ -17,7 +17,7 @@ services:
     volumes:
       - /usr/bin/subfinder:/usr/bin/subfinder
       - /usr/bin/assetfinder:/usr/bin/assetfinder
-      - /usr/bin/findomain:/usr/bin/findomain
+      - /usr/local/bin/findomain:/usr/bin/findomain
 
   mongodb:
     image: mongo:latest
