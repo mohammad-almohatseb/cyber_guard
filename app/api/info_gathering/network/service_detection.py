@@ -41,4 +41,4 @@ async def detect_services(host, port_range="1-1000") -> list:
         logger.error(f"[nmap] Exception during service detection on {host}: {e}")
         return [{"host": host, "services": [f"Exception: {e}"]}]
 
-    return [{"host": host, "services": services}]
+    return {"host": host, "services": services}

@@ -92,4 +92,4 @@ async def scan_os(host):
         "urls": urls
     }
 
-    return [result]  # Return as list to match model: os_detection: Optional[List]
+    return result  

@@ -16,7 +16,6 @@ class WebInfoGatheringModel(Document):
     certificate_details: Optional[List] = None
     cve_discoveries: Optional[List] = None
     directories: Optional[List[str]] = None
-    email_enumerations: Optional[List] = None
     open_ports: Optional[List] = None
     server_info: Optional[List] = None
     subdomains: Optional[List] = None
@@ -28,11 +27,12 @@ class WebInfoGatheringModel(Document):
 
 
     class Settings:
-        name = "info_gathering"
+        name = "web_info_gathering"
         
         
 class NetworkInfoGathering(Document):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    target: Optional[str]
     alive_hosts: Optional[List] = None
     firewall_info: Optional[List] = None
     detected_services: Optional[List] = None

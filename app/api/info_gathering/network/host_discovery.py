@@ -15,7 +15,7 @@ async def discover_hosts(network_range: str) -> list[dict]:
 
     try:
         result = subprocess.run(['nmap', '-sn', network_range],
-                                capture_output=True, text=True, timeout=60)
+                                capture_output=True, text=True, timeout=300)
 
         if result.returncode == 0:
             output = result.stdout

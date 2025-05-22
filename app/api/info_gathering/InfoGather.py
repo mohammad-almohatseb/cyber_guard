@@ -19,6 +19,7 @@ from app.api.info_gathering.network.service_detection import detect_services
 from app.api.models.information import WebInfoGatheringModel, NetworkInfoGathering
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  
 
 
 class InfoGather:
@@ -29,31 +30,30 @@ class InfoGather:
         ip_address = ip_address.strip()
         logger.info(f"[InfoGather] Starting network scan for {ip_address}")
 
-        # Host discovery
         alive_hosts_result = await discover_hosts(ip_address)
+        logger.debug(f"[InfoGather] Discovered hosts: {alive_hosts_result}")
         if not alive_hosts_result:
             logger.warning(f"[InfoGather] No hosts found for {ip_address}")
             return {"status": "no_hosts", "ip_address": ip_address}
 
         ip_addresses = [host["host"] for host in alive_hosts_result if "host" in host]
 
-        # Firewall detection
         firewall_detection_result = await enumerate_firewalls(ip_addresses)
+        logger.debug(f"[InfoGather] Firewall detection result: {firewall_detection_result}")
 
-        # OS detection
         os_detection_result = []
         for ip in ip_addresses:
             result = await scan_os(ip)
+            logger.debug(f"[InfoGather] OS detection result for {ip}: {result}")
             os_detection_result.append(result)
 
-        # Service detection
         service_detection_result = []
         for ip in ip_addresses:
             result = await detect_services(ip)
+            logger.debug(f"[InfoGather] Service detection result for {ip}: {result}")
             service_detection_result.append(result)
 
-        # Save to DB
-        info_gathering = NetworkInfoGathering(
+        network_info_gathering = NetworkInfoGathering(
             target=ip_address,
             target_type="network",
             alive_hosts=alive_hosts_result,
@@ -61,7 +61,8 @@ class InfoGather:
             os_detection=os_detection_result,
             detected_services=service_detection_result
         )
-        await info_gathering.save()
+        await network_info_gathering.save()
+        logger.info(f"[InfoGather] Network info gathering saved for {ip_address}")
 
         return {"status": "success", "ip_address": ip_address}
 
@@ -69,50 +70,49 @@ class InfoGather:
         domain = domain.strip().lower()
         logger.info(f"[InfoGather] Starting web scan for {domain}")
 
-        # Subdomain enumeration
         subdomains_result = await run_subdomain_enum(domain)
+        logger.debug(f"[InfoGather] Subdomains found: {subdomains_result}")
         if not subdomains_result:
             logger.warning(f"[InfoGather] No subdomains found for {domain}")
             return {"status": "no_subdomains", "domain": domain}
-
         subdomains_result.append(domain)
 
-        # Open ports
         open_ports_result = await run_open_ports(domain)
+        logger.debug(f"[InfoGather] Open ports scan result: {open_ports_result}")
         if isinstance(open_ports_result, dict) and "error" in open_ports_result:
             logger.error(f"[InfoGather] Error during open port scan: {open_ports_result['error']}")
             open_ports_data = []
         else:
             open_ports_data = open_ports_result
 
-        # Archive URLs
         archieve_urls_result = await enumerate_urls([domain])
+        logger.debug(f"[InfoGather] Archive URLs result: {archieve_urls_result}")
 
-        # Certificate details
         certificate_details_result = await enumerate_certificates(subdomains_result)
+        logger.debug(f"[InfoGather] Certificate details: {certificate_details_result}")
 
-        # Technology info
         technology_info_result = gather_tech_info(domain, subdomains_result)
+        logger.debug(f"[InfoGather] Technology info: {technology_info_result}")
 
-        # Directory enumeration
         directories_enum_result = await enum_dir_on_subdomains(subdomains_result)
+        logger.debug(f"[InfoGather] Directory enumeration: {directories_enum_result}")
 
-        # Server info
         server_info_result = await final_result(subdomains_result)
+        logger.debug(f"[InfoGather] Server info result: {server_info_result}")
 
-        # Input validation
         all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
         all_injectables = [url for sublist in all_injectables_nested for url in sublist]
+        logger.debug(f"[InfoGather] URLs for input validation: {all_injectables}")
         input_validation_result = await scan_input_validation(all_injectables)
+        logger.debug(f"[InfoGather] Input validation result: {input_validation_result}")
 
-        # HTTPS headers
         https_headers_result = await scan_https_headers(subdomains_result)
+        logger.debug(f"[InfoGather] HTTPS headers result: {https_headers_result}")
 
-        # WAF detection
         waf_detections_result = await enumerate_waf(subdomains_result)
+        logger.debug(f"[InfoGather] WAF detection result: {waf_detections_result}")
 
-        # Save to DB
-        info_gathering = WebInfoGatheringModel(
+        web_info_gathering = WebInfoGatheringModel(
             target=domain,
             target_type="web",
             subdomains=subdomains_result,
@@ -126,7 +126,7 @@ class InfoGather:
             input_validation=input_validation_result,
             waf_detections=waf_detections_result
         )
-        await info_gathering.save()
+        await web_info_gathering.save()
         logger.info(f"[InfoGather] Web info gathering saved for {domain}")
 
         return {"status": "success", "domain": domain}
