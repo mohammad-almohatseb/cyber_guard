@@ -50,7 +50,7 @@ async def process_payload(client, full_url, param, item):
         soup = BeautifulSoup(test_resp.text, "html.parser")
         text_only = soup.get_text()
 
-        reflected = payload in text_only or re.search(re.escape(payload), test_resp.text, re.IGNORECASE)
+        reflected = payload in text_only or bool(re.search(re.escape(payload), test_resp.text, re.IGNORECASE))
         error_signs = bool(re.search(r"(error|exception|traceback|syntax)", test_resp.text, re.IGNORECASE))
         encoded_payload = re.sub(r"[^a-zA-Z0-9]", "", payload)
         encoded_found = encoded_payload in re.sub(r"[^a-zA-Z0-9]", "", test_resp.text)
@@ -106,9 +106,9 @@ async def scan_input_validation(injectable_urls: list) -> list:
             raw_results = await asyncio.gather(*(sem_task(task) for task in tasks))
 
             for r in raw_results:
-                results.append(r)  # Just append, don't return inside the loop
+                results.append(r)
 
-        return results  # Final return after loop completes
+        return results
 
     except Exception as e:
         return [{"error": f"Fatal error in scanning URLs: {str(e)}"}]

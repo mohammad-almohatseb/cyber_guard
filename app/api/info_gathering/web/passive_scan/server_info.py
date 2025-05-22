@@ -1,45 +1,49 @@
 import aiohttp
 import asyncio
 import logging
-import shlex
-import asyncio.subprocess
+import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Fetch server header
+# Fetch server-related headers
 async def fetch_server_header(session, subdomain):
-    try:
-        url = f"http://{subdomain}"
-        async with session.get(url, timeout=10) as response:
-            server = response.headers.get("Server", "")
-            return subdomain, server
-    except Exception as e:
-        logger.warning(f"[Server Header] Error fetching server header for {subdomain}: {e}")
-        return subdomain, ""
+    for scheme in ["http", "https"]:
+        try:
+            url = f"{scheme}://{subdomain}"
+            async with session.get(url, timeout=10, allow_redirects=True) as response:
+                headers = response.headers
+                server = headers.get("Server", "")
+                powered_by = headers.get("X-Powered-By", "")
+                via = headers.get("Via", "")
+                return subdomain, server, powered_by, via
+        except Exception as e:
+            logger.warning(f"[Server Header] Error fetching {scheme.upper()} headers for {subdomain}: {e}")
+    return subdomain, "", "", ""
 
+# Parse server product and version
+async def parse_server_info(header: str):
+    if not header:
+        return "Unknown", "Unknown"
 
-async def parse_server_info(server_header: str):
-    if not server_header:
-        return ("Unknown", "Unknown")
+    match = re.match(r"([^\s/]+)(?:/([\d\.]+))?", header)
+    if match:
+        product = match.group(1)
+        version = match.group(2) if match.group(2) else "Unknown"
+        return product, version
+    return header, "Unknown"
 
-    parts = server_header.split("/")
-    if len(parts) == 2:
-        return parts[0], parts[1]
-    else:
-        return server_header, "Unknown"
-
-
-async def guess_os(server: str):
-    server = server.lower()
-    if "win" in server:
+# Guess OS from all headers
+async def guess_os(*headers):
+    combined = " ".join(h.lower() for h in headers if h)
+    if any(x in combined for x in ["win32", "windows", "asp.net"]):
         return "Windows"
-    elif "unix" in server or "ubuntu" in server or "debian" in server or "linux" in server:
+    elif any(x in combined for x in ["unix", "ubuntu", "debian", "linux", "centos", "apache", "nginx"]):
         return "Linux/Unix"
     else:
         return "Unknown"
 
-
+# Generate a CVE search URL
 async def fetch_cves(product: str, version: str):
     try:
         query = f"{product}+{version}" if version != "Unknown" else product
@@ -50,11 +54,15 @@ async def fetch_cves(product: str, version: str):
         logger.warning(f"[CVEs] Failed to create CVE search URL for {product}/{version}: {e}")
         return ""
 
-
+# Scan a single subdomain
 async def scan_subdomain(session, subdomain):
-    sub, server_header = await fetch_server_header(session, subdomain)
-    product, version = await parse_server_info(server_header)
-    os_guess = await guess_os(server_header)
+    sub, server_header, powered_by, via = await fetch_server_header(session, subdomain)
+    all_headers = [server_header, powered_by, via]
+
+    # Choose the most useful header for version info
+    main_header = next((h for h in all_headers if h), "")
+    product, version = await parse_server_info(main_header)
+    os_guess = await guess_os(*all_headers)
     cve_url = await fetch_cves(product, version)
 
     return {
@@ -64,16 +72,14 @@ async def scan_subdomain(session, subdomain):
         "cve_url": cve_url,
     }
 
-
+# Run scan for all subdomains
 async def final_result(subdomains):
     async with aiohttp.ClientSession() as session:
         tasks = [scan_subdomain(session, sub) for sub in subdomains]
         results = await asyncio.gather(*tasks)
 
-        for res in results:
-            logger.info(f"\nSubdomain: {res['subdomain']}")
-            logger.info(f"Server: {res['server']}")
-            logger.info(f"OS: {res['os']}")
-            logger.info(f"CVE URL: {res['cve_url'] if res['cve_url'] else 'No CVE URL generated'}\n")
+       
 
         return results
+
+
