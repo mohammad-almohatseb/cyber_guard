@@ -106,9 +106,9 @@ async def scan_input_validation(injectable_urls: list) -> list:
             raw_results = await asyncio.gather(*(sem_task(task) for task in tasks))
 
             for r in raw_results:
-                results.append(r)  # ✅ Just append, don't return inside the loop
+                results.append(r)  # Just append, don't return inside the loop
 
-        return results  # ✅ Final return after loop completes
+        return results  # Final return after loop completes
 
     except Exception as e:
         return [{"error": f"Fatal error in scanning URLs: {str(e)}"}]
