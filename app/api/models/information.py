@@ -1,17 +1,18 @@
-from datetime import datetime
-from typing import Any, List, Optional
-from typing import Optional, Dict, List
+from datetime import timezone, datetime
+from typing import Annotated, List, Optional
+from typing import Optional, List
 
-from beanie import Document
+from beanie import Document, Indexed
 from beanie.odm.fields import PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.api.models.BaseModelNoNone import BaseModelNoNone
 
 
-class WebInfoGatheringModel(Document):
+class WebInfoGatheringModel(Document,BaseModelNoNone):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
-    target: Optional[str]
+    target: Annotated[str, Indexed(unique=True)]
     target_type: Optional[str]
-    timestamp: datetime = Field(default_factory=datetime.now, alias="timestamp")
     archive_urls: Optional[List] = None
     certificate_details: Optional[List] = None
     cve_discoveries: Optional[List] = None
@@ -24,15 +25,18 @@ class WebInfoGatheringModel(Document):
     waf_detections: Optional[List] = None
     input_validation: Optional[List] = None
     https_headers: Optional[List[dict]] = None
-
+    
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        )
 
     class Settings:
         name = "web_info_gathering"
         
         
-class NetworkInfoGathering(Document):
+class NetworkInfoGathering(Document,BaseModelNoNone):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
-    target: Optional[str]
+    target: Annotated[str, Indexed(unique=True)]
     alive_hosts: Optional[List] = None
     firewall_info: Optional[List] = None
     detected_services: Optional[List] = None

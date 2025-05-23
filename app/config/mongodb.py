@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from motor import motor_asyncio
 import logging
 
+from app.api.models.vuln_assessment import NetworkVulnerabilityAssessmentModel, WebVulnerabilityAssessmentModel
+
 logging.basicConfig(level=logging.INFO)
 
 class MongoDB:
@@ -23,6 +25,8 @@ class MongoDB:
                 document_models=[
                     WebInfoGatheringModel,
                     NetworkInfoGathering,
+                    WebVulnerabilityAssessmentModel,
+                    NetworkVulnerabilityAssessmentModel
                 ]
             )
         except Exception as e:

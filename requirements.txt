@@ -4,7 +4,7 @@ python-multipart==0.0.19
 requests
 httpx==0.28.1
 pydantic[email]
-uvicorn[standard]
+uvicorn[standard]==0.34.0
 motor==3.7.0 
 beanie==1.29.0 
 dnspython==2.2.0
