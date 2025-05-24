@@ -15,6 +15,7 @@ services:
     environment:
       MONGO_URI: mongodb://admin:password@mongodb:27017/cyberguard?authSource=admin
     volumes:
+      - .:/app
       - /usr/bin/subfinder:/usr/bin/subfinder
       - /usr/bin/assetfinder:/usr/bin/assetfinder
       - /usr/local/bin/findomain:/usr/bin/findomain

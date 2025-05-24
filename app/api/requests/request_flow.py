@@ -3,9 +3,11 @@ from fastapi.responses import JSONResponse
 from app.api.schemas.base_request import RequestType
 from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest 
 from app.api.info_gathering.InfoGather import InfoGather
+from app.api.vulnerability_assesment.VulnerabilityAssessment import VulnerabilityAssessment
 
 router = APIRouter()
 info_gather = InfoGather()  
+vulnerability_assessment = VulnerabilityAssessment()
 
 @router.post("/select_check")   
 async def select_check(request: RequestType):
@@ -43,3 +45,13 @@ async def network_check(request: NetworkRequest):
         "message": "Network scan started. Results will be stored in MongoDB.",
         "target_ip_address": target_ip_address
     })
+
+@router.post("/web_vulnerability_assessment")
+async def web_vulnerability_assessment(request: WebRequest):
+    await vulnerability_assessment.web_vulnerability_assesment(domain=request.domain)
+    return JSONResponse(content={"message": "Vulnerability assessment started. Results will be stored in MongoDB."})
+
+@router.post("/network_vulnerability_assessment")
+async def network_vulnerability_assessment(request: NetworkRequest):
+    await vulnerability_assessment.network_vulnerability_assesment(ip_address=request.ip_address)
+    return JSONResponse(content={"message": "Vulnerability assessment started. Results will be stored in MongoDB."})
