@@ -14,7 +14,7 @@ class WebVulnerabilityAssessmentModel(Document,BaseModelNoNone):
     waf_cve_data: Optional[List] = None
     server_cve_data: Optional[List] = None
     service_cve_data: Optional[List] = None
-    certificate_data: Optional[List] = None
+    
     
     class settings:
         name = "web_vulnerability_assessment"
