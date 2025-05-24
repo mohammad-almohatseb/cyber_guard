@@ -11,7 +11,10 @@ from app.api.models.BaseModelNoNone import BaseModelNoNone
 
 class WebVulnerabilityAssessmentModel(Document,BaseModelNoNone):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
-    cve_data: Optional[List] = None
+    waf_cve_data: Optional[List] = None
+    server_cve_data: Optional[List] = None
+    service_cve_data: Optional[List] = None
+    certificate_data: Optional[List] = None
     
     class settings:
         name = "web_vulnerability_assessment"

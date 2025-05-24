@@ -103,8 +103,8 @@ class InfoGather:
         all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
         all_injectables = [url for sublist in all_injectables_nested for url in sublist]
         logger.debug(f"[InfoGather] URLs for input validation: {all_injectables}")
-        input_validation_result = await scan_input_validation(all_injectables)
-        logger.debug(f"[InfoGather] Input validation result: {input_validation_result}")
+        # input_validation_result = await scan_input_validation(all_injectables)
+        # logger.debug(f"[InfoGather] Input validation result: {input_validation_result}")
 
         https_headers_result = await scan_https_headers(subdomains_result)
         logger.debug(f"[InfoGather] HTTPS headers result: {https_headers_result}")
@@ -123,7 +123,7 @@ class InfoGather:
             server_info=server_info_result,
             technology_info=technology_info_result,
             https_headers=https_headers_result,
-            input_validation=input_validation_result,
+            # input_validation=input_validation_result,
             waf_detections=waf_detections_result
         )
         await web_info_gathering.save()
