@@ -11,11 +11,16 @@ from app.api.models.BaseModelNoNone import BaseModelNoNone
 
 class WebVulnerabilityAssessmentModel(Document,BaseModelNoNone):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    target: Optional[str] = None
     waf_cve_data: Optional[List] = None
     server_cve_data: Optional[List] = None
     service_cve_data: Optional[List] = None
-    
-    
+    dirictory_analysis_data: Optional[List] = None
+    https_headers_data: Optional[List] = None
+    certificate_data: Optional[List] = None
+    input_validation_data: Optional[List] = None
+
+
     class settings:
         name = "web_vulnerability_assessment"
     
@@ -23,9 +28,11 @@ class WebVulnerabilityAssessmentModel(Document,BaseModelNoNone):
 class NetworkVulnerabilityAssessmentModel(Document,BaseModelNoNone):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     target: Annotated[str, Indexed(unique=True)]
-    target_type: Optional[str]
-    timestamp: datetime = Field(default_factory=datetime.now, alias="timestamp")
-    vulnerabilities: Optional[List] = None
+    timestamp: Optional[datetime] = Field(default_factory=datetime.now, alias="timestamp")
+    os_detection_data: Optional[List] = None
+    waf_cve_data: Optional[List] = None
+    detected_services_data: Optional[List] = None
     
+
     class settings:
         name = "network_vulnerability_assessment"

@@ -10,7 +10,7 @@ async def check_firewall(host: str) -> list[dict]:
 
     try:
         process = await asyncio.create_subprocess_exec(
-            'nmap', '-p', '1-1000', '--open', '--unprivileged', host,
+            'nmap', '-Pn', '-p', '1-1000', '--open', '--unprivileged', host,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -20,24 +20,54 @@ async def check_firewall(host: str) -> list[dict]:
         except asyncio.TimeoutError:
             logger.error(f"[Firewall Check] Timeout during firewall detection on {host}")
             process.kill()
-            return [{'host': host, 'firewall_detected': None, 'error': 'Timeout'}]
+            return [{
+                'host': host,
+                'firewall_detected': None,
+                'error': 'Timeout',
+                'output': None
+            }]
+
+        output = stdout.decode()
+        error_msg = stderr.decode().strip()
 
         if process.returncode == 0:
-            output = stdout.decode()
-            if "filtered" in output:
+            # Enhanced detection logic
+            suspicious_keywords = [
+                "filtered",
+                "0 open ports",
+                "All 1000 scanned ports",
+                "host seems down",
+                "no response"
+            ]
+            if any(keyword in output for keyword in suspicious_keywords):
                 firewall_detected = True
                 logger.info(f"[Firewall Check] Firewall detected on {host}")
             else:
                 logger.info(f"[Firewall Check] No firewall detected on {host}")
         else:
-            error_msg = stderr.decode().strip()
             logger.warning(f"[Firewall Check] Nmap error on {host}: {error_msg}")
-            return [{'host': host, 'firewall_detected': None, 'error': error_msg}]
+            return [{
+                'host': host,
+                'firewall_detected': None,
+                'error': error_msg,
+                'output': output
+            }]
+
     except Exception as e:
         logger.error(f"[Firewall Check] Exception occurred on {host}: {e}")
-        return [{'host': host, 'firewall_detected': None, 'error': str(e)}]
+        return [{
+            'host': host,
+            'firewall_detected': None,
+            'error': str(e),
+            'output': None
+        }]
 
-    return [{'host': host, 'firewall_detected': firewall_detected, 'error': None}]
+    return [{
+        'host': host,
+        'firewall_detected': firewall_detected,
+        'error': None,
+        'output': output
+    }]
 
 
 async def enumerate_firewalls(hosts: list[str]) -> list[dict]:
@@ -48,7 +78,7 @@ async def enumerate_firewalls(hosts: list[str]) -> list[dict]:
     flat_results = [item for sublist in results for item in sublist]
 
     for res in flat_results:
-        if res["firewall_detected"]:
+        if res["firewall_detected"] is True:
             logger.info(f" Host: {res['host']} has a firewall.")
         elif res["firewall_detected"] is False:
             logger.info(f" Host: {res['host']} does not have a firewall.")

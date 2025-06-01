@@ -33,43 +33,35 @@ async def parse_server_info(header: str):
         return product, version
     return header, "Unknown"
 
-# Guess OS from all headers
+# Guess OS and version from all headers
 async def guess_os(*headers):
     combined = " ".join(h.lower() for h in headers if h)
-    if any(x in combined for x in ["win32", "windows", "asp.net"]):
-        return "Windows"
-    elif any(x in combined for x in ["unix", "ubuntu", "debian", "linux", "centos", "apache", "nginx"]):
-        return "Linux/Unix"
-    else:
-        return "Unknown"
 
-# Generate a CVE search URL
-async def fetch_cves(product: str, version: str):
-    try:
-        query = f"{product}+{version}" if version != "Unknown" else product
-        url = f"https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword={query}"
-        logger.info(f"[CVEs] Created CVE search URL: {url}")
-        return url
-    except Exception as e:
-        logger.warning(f"[CVEs] Failed to create CVE search URL for {product}/{version}: {e}")
-        return ""
+    if "windows" in combined:
+        version = re.search(r"windows\s?(server\s?\d+|[\d\.]+)?", combined)
+        return "Windows", version.group(1) if version and version.group(1) else "Unknown"
+
+    elif any(x in combined for x in ["ubuntu", "debian", "centos", "red hat", "linux", "unix"]):
+        version = re.search(r"(ubuntu|debian|centos|red hat)[\s/]*([\d\.]+)?", combined)
+        os_name = version.group(1).capitalize() if version else "Linux/Unix"
+        os_version = version.group(2) if version and version.group(2) else "Unknown"
+        return os_name, os_version
+
+    return "Unknown", "Unknown"
 
 # Scan a single subdomain
 async def scan_subdomain(session, subdomain):
     sub, server_header, powered_by, via = await fetch_server_header(session, subdomain)
     all_headers = [server_header, powered_by, via]
 
-    # Choose the most useful header for version info
     main_header = next((h for h in all_headers if h), "")
     product, version = await parse_server_info(main_header)
-    os_guess = await guess_os(*all_headers)
-    cve_url = await fetch_cves(product, version)
+    os_name, os_version = await guess_os(*all_headers)
 
     return {
         "subdomain": sub,
         "server": f"{product}/{version}" if version != "Unknown" else product,
-        "os": os_guess,
-        "cve_url": cve_url,
+        "os": f"{os_name} {os_version}" if os_version != "Unknown" else os_name,
     }
 
 # Run scan for all subdomains
@@ -77,9 +69,4 @@ async def final_result(subdomains):
     async with aiohttp.ClientSession() as session:
         tasks = [scan_subdomain(session, sub) for sub in subdomains]
         results = await asyncio.gather(*tasks)
-
-       
-
         return results
-
-

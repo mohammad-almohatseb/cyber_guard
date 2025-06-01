@@ -25,7 +25,7 @@ def detect_waf(subdomain: str, timeout: int = 5) -> dict:
     try:
         logger.info(f"[WAF Check] Checking WAF for: {subdomain}")
         headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(f"http://{subdomain}", headers=headers, timeout=timeout)
+        response = requests.get(f"https://{subdomain}", headers=headers, timeout=timeout)
 
         if response.status_code == 200:
             headers_combined = "\n".join(f"{k.lower()}: {v.lower()}" for k, v in response.headers.items())
@@ -60,9 +60,9 @@ async def enumerate_waf(subdomains: list[str]) -> list[dict]:
     for info in results:
         waf_details.append(info)
         if info['has_waf']:
-            logger.info(f"✅ {info['subdomain']} has a WAF: {info['waf_name']}")
+            logger.info(f" {info['subdomain']} has a WAF: {info['waf_name']}")
         else:
-            logger.info(f"❌ {info['subdomain']} does NOT have a WAF.")
+            logger.info(f" {info['subdomain']} does NOT have a WAF.")
 
     return waf_details
 

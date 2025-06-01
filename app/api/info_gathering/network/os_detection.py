@@ -1,24 +1,8 @@
 import asyncio
 import logging
-import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def generate_version_range(start_version, end_version):
-    """Generate a list of versions between start_version and end_version."""
-    start_parts = [int(part) for part in start_version.split('.')]
-    end_parts = [int(part) for part in end_version.split('.')]
-
-    versions = []
-    while start_parts <= end_parts:
-        version = '.'.join(map(str, start_parts))
-        versions.append(version)
-        start_parts[1] += 1
-        if start_parts[1] > 9:
-            start_parts[0] += 1
-            start_parts[1] = 0
-    return versions
 
 async def scan_os(host):
     logger.info(f"[nmap] Detecting OS on host: {host}")
@@ -32,15 +16,14 @@ async def scan_os(host):
         )
 
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=60)
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=120)
         except asyncio.TimeoutError:
             logger.error(f"[nmap] Timeout during OS detection on {host}")
             process.kill()
-            return [{
+            return {
                 "host": host,
-                "os_info": "Timeout",
-                "urls": []
-            }]
+                "os_info": "Timeout"
+            }
 
         if process.returncode == 0:
             output = stdout.decode()
@@ -64,32 +47,9 @@ async def scan_os(host):
     except Exception as e:
         logger.error(f"[nmap] Exception during OS detection on {host}: {e}")
 
-    # Build URLs based on version ranges
-    urls = []
-    if os_info:
-        os_info_cleaned = re.sub(r'[^0-9,.\-]', '', os_info)
-        version_ranges = os_info_cleaned.split(",")
-        for version_range in version_ranges:
-            version_range = version_range.strip()
-            if '-' in version_range:
-                start_version, end_version = version_range.split("-")
-                start_version = start_version.strip()
-                end_version = end_version.strip()
-
-                versions = generate_version_range(start_version, end_version)
-                for version in versions:
-                    url = f"https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=Linux+{version.replace(' ', '+')}"
-                    urls.append(url)
-            else:
-                version = version_range.strip()
-                if version:
-                    url = f"https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=Linux+{version.replace(' ', '+')}"
-                    urls.append(url)
-
-    result = {
+    return {
         "host": host,
-        "os_info": os_info if os_info else "Unknown",
-        "urls": urls
+        "os_info": os_info if os_info else "Unknown"
     }
 
-    return result  
+

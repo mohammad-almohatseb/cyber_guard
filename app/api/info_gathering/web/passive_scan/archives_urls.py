@@ -31,7 +31,7 @@ async def enumerate_urls(subdomain_list):
     for sub in subdomain_list:
         logger.info(f"[waybackurls] Scanning: {sub}")
         try:
-            result = subprocess.run(['waybackurls', sub], capture_output=True, text=True, timeout=60)
+            result = subprocess.run(['waybackurls', sub], capture_output=True, text=True, timeout=120)
             if result.returncode == 0:
                 urls = result.stdout.strip().split('\n')
                 logger.info(f"[waybackurls] Found {len(urls)} URLs for {sub}")

@@ -15,7 +15,6 @@ class WebInfoGatheringModel(Document,BaseModelNoNone):
     target_type: Optional[str]
     archive_urls: Optional[List] = None
     certificate_details: Optional[List] = None
-    cve_discoveries: Optional[List] = None
     directories: Optional[List[str]] = None
     open_ports: Optional[List] = None
     server_info: Optional[List] = None
@@ -23,7 +22,6 @@ class WebInfoGatheringModel(Document,BaseModelNoNone):
     technology_info: Optional[List] = None
     username_enumerations: Optional[List] = None
     waf_detections: Optional[List] = None
-    input_validation: Optional[List] = None
     https_headers: Optional[List[dict]] = None
     
     timestamp: datetime = Field(

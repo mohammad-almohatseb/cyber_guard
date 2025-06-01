@@ -8,13 +8,33 @@ R = TypeVar('R')
 request_id_ctx: ContextVar[str] = ContextVar('request_id', default='SYSTEM')
 correlation_id_ctx: ContextVar[str] = ContextVar('correlation_id', default='GLOBAL')
 
+# ANSI colors
+RESET = "\033[0m"
+COLORS = {
+    logging.DEBUG: "\033[94m",     # Blue
+    logging.INFO: "\033[92m",      # Green
+    logging.WARNING: "\033[93m",   # Yellow
+    logging.ERROR: "\033[91m",     # Red
+    logging.CRITICAL: "\033[95m",  # Magenta
+}
+
+# Console handler with color
+class ColoredFormatter(logging.Formatter):
+    def format(self, record):
+        level_color = COLORS.get(record.levelno, "")
+        record.msg = f"{level_color}{record.msg}{RESET}"
+        return super().format(record)
+
+# Setup logging with separate handlers for console and file
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+file_handler = logging.FileHandler('app.log')
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('app.log')
-    ]
+    handlers=[console_handler, file_handler]
 )
 
 class ContextLogger:
@@ -22,7 +42,6 @@ class ContextLogger:
         self.logger = logging.getLogger(name)
     
     def _format_message(self, message: str, context: Dict[str, Any] = None) -> str:
-        """Enhance message with context and request IDs"""
         context = context or {}
         ctx_str = ' '.join([f"{k}={v}" for k, v in context.items()])
         return f"[{request_id_ctx.get()}] [{correlation_id_ctx.get()}] {message} | {ctx_str}"

@@ -7,14 +7,13 @@ from app.api.info_gathering.web.passive_scan.certificate_details import enumerat
 from app.api.info_gathering.web.passive_scan.technology_info import gather_tech_info
 from app.api.info_gathering.web.passive_scan.directory_enumeration import enum_dir_on_subdomains
 from app.api.info_gathering.web.passive_scan.server_info import final_result
-from app.api.info_gathering.web.active_scan.input_validation import scan_input_validation
 from app.api.info_gathering.web.active_scan.http_headers import scan_https_headers
 from app.api.info_gathering.web.active_scan.waf_detection import enumerate_waf
 
 from app.api.info_gathering.network.firewall_detection import enumerate_firewalls
 from app.api.info_gathering.network.host_discovery import discover_hosts
 from app.api.info_gathering.network.os_detection import scan_os
-from app.api.info_gathering.network.service_detection import detect_services
+from app.api.info_gathering.network.service_detection import scan_open_services
 
 from app.api.models.information import WebInfoGatheringModel, NetworkInfoGathering
 
@@ -49,7 +48,7 @@ class InfoGather:
 
         service_detection_result = []
         for ip in ip_addresses:
-            result = await detect_services(ip)
+            result = await scan_open_services(ip)
             logger.debug(f"[InfoGather] Service detection result for {ip}: {result}")
             service_detection_result.append(result)
 
@@ -103,8 +102,7 @@ class InfoGather:
         all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
         all_injectables = [url for sublist in all_injectables_nested for url in sublist]
         logger.debug(f"[InfoGather] URLs for input validation: {all_injectables}")
-        # input_validation_result = await scan_input_validation(all_injectables)
-        # logger.debug(f"[InfoGather] Input validation result: {input_validation_result}")
+       
 
         https_headers_result = await scan_https_headers(subdomains_result)
         logger.debug(f"[InfoGather] HTTPS headers result: {https_headers_result}")
@@ -123,7 +121,7 @@ class InfoGather:
             server_info=server_info_result,
             technology_info=technology_info_result,
             https_headers=https_headers_result,
-            # input_validation=input_validation_result,
+          
             waf_detections=waf_detections_result
         )
         await web_info_gathering.save()
