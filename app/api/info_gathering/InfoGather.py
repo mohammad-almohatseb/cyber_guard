@@ -4,7 +4,6 @@ from app.api.info_gathering.web.passive_scan.subdomain_enumeration import run_su
 from app.api.info_gathering.web.passive_scan.open_ports import run_open_ports
 from app.api.info_gathering.web.passive_scan.archives_urls import enumerate_urls
 from app.api.info_gathering.web.passive_scan.certificate_details import enumerate_certificates
-from app.api.info_gathering.web.passive_scan.technology_info import gather_tech_info
 from app.api.info_gathering.web.passive_scan.directory_enumeration import enum_dir_on_subdomains
 from app.api.info_gathering.web.passive_scan.server_info import final_result
 from app.api.info_gathering.web.active_scan.http_headers import scan_https_headers
@@ -25,6 +24,7 @@ class InfoGather:
     def __init__(self):
         pass
 
+# Network Info Gathering
     async def networkExecution(self, ip_address: str):
         ip_address = ip_address.strip()
         logger.info(f"[InfoGather] Starting network scan for {ip_address}")
@@ -65,6 +65,8 @@ class InfoGather:
 
         return {"status": "success", "ip_address": ip_address}
 
+
+# Web info gathering
     async def webExecution(self, domain: str):
         domain = domain.strip().lower()
         logger.info(f"[InfoGather] Starting web scan for {domain}")
@@ -90,8 +92,6 @@ class InfoGather:
         certificate_details_result = await enumerate_certificates(subdomains_result)
         logger.debug(f"[InfoGather] Certificate details: {certificate_details_result}")
 
-        technology_info_result = gather_tech_info(domain, subdomains_result)
-        logger.debug(f"[InfoGather] Technology info: {technology_info_result}")
 
         directories_enum_result = await enum_dir_on_subdomains(subdomains_result)
         logger.debug(f"[InfoGather] Directory enumeration: {directories_enum_result}")
@@ -102,7 +102,7 @@ class InfoGather:
         all_injectables_nested = [item["injectable_urls"] for item in archieve_urls_result if "injectable_urls" in item]
         all_injectables = [url for sublist in all_injectables_nested for url in sublist]
         logger.debug(f"[InfoGather] URLs for input validation: {all_injectables}")
-       
+    
 
         https_headers_result = await scan_https_headers(subdomains_result)
         logger.debug(f"[InfoGather] HTTPS headers result: {https_headers_result}")
@@ -119,9 +119,8 @@ class InfoGather:
             certificate_details=certificate_details_result,
             directories=directories_enum_result,
             server_info=server_info_result,
-            technology_info=technology_info_result,
             https_headers=https_headers_result,
-          
+        
             waf_detections=waf_detections_result
         )
         await web_info_gathering.save()

@@ -40,7 +40,7 @@ logging.basicConfig(
 class ContextLogger:
     def __init__(self, name: str):
         self.logger = logging.getLogger(name)
-    
+        logging.getLogger("pymongo").setLevel(logging.WARNING)
     def _format_message(self, message: str, context: Dict[str, Any] = None) -> str:
         context = context or {}
         ctx_str = ' '.join([f"{k}={v}" for k, v in context.items()])
