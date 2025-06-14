@@ -63,4 +63,4 @@
     
     # ✅ Start FastAPI app with Uvicorn
     # CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-    CMD ["gunicorn", "app.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "8", "--log-level", "debug","--timeout", "300"]
+    CMD ["gunicorn", "app.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "8", "--log-level", "info","--timeout", "900"]
