@@ -1,4 +1,4 @@
-version: "3.8"
+
 
 services:
   app:
@@ -16,8 +16,8 @@ services:
       MONGO_URI: mongodb://admin:password@mongodb:27017/cyberguard?authSource=admin
     volumes:
       - .:/app
-      - /usr/local/bin/subfinder:/usr/bin/subfinder
-      - /usr/local/bin/assetfinder:/usr/bin/assetfinder
+      - /usr/bin/subfinder:/usr/bin/subfinder
+      - /usr/bin/assetfinder:/usr/bin/assetfinder
       - /usr/local/bin/findomain:/usr/bin/findomain
   mongodb:
     image: mongo:latest

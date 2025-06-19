@@ -5,6 +5,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Limit the number of concurrent HTTP requests
+semaphore = asyncio.Semaphore(50)
 
 async def run_tool(command):
     """Run a subdomain enumeration tool asynchronously and return the results."""
@@ -24,20 +26,30 @@ async def run_tool(command):
         logger.error(f"{command[0]} not found. Make sure it's installed and in your PATH.")
         return []
 
+async def fetch(client, url, subdomain):
+    """Try to fetch a URL and return the subdomain if it is live."""
+    async with semaphore:
+        try:
+            response = await client.get(url)
+            if response.status_code < 400:
+                return subdomain
+        except Exception as e:
+            logger.debug(f"{url} failed: {e}")
+    return None
 
 async def check_live_subdomains(subdomains):
-    """Check which subdomains are live using HTTP requests."""
-    live_subdomains = []
-    async with httpx.AsyncClient() as client:
-        tasks = [client.get(f"http://{sub}", timeout=20) for sub in subdomains]
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
-        for subdomain, response in zip(subdomains, responses):
-            if isinstance(response, httpx.Response) and response.status_code == 200:
-                live_subdomains.append(subdomain)
-            elif isinstance(response, Exception):
-                logger.debug(f"Error checking {subdomain}: {response}")
-    return live_subdomains
+    """Check which subdomains are live using both HTTP and HTTPS."""
+    live_subdomains = set()
+    async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
+        tasks = []
+        for sub in subdomains:
+            tasks.append(fetch(client, f"http://{sub}", sub))
+            tasks.append(fetch(client, f"https://{sub}", sub))
 
+        results = await asyncio.gather(*tasks)
+        live_subdomains = {r for r in results if r}
+
+    return list(live_subdomains)
 
 async def run_subdomain_enum(domain: str) -> list:
     """Run subdomain enumeration asynchronously and return only live subdomains."""
@@ -62,3 +74,4 @@ async def run_subdomain_enum(domain: str) -> list:
         logger.info(f" - {sub}")
 
     return live_subdomains
+
