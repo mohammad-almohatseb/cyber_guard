@@ -4,10 +4,13 @@ from app.api.schemas.base_request import RequestType
 from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest 
 from app.api.info_gathering.InfoGather import InfoGather
 from app.api.vulnerability_assesment.VulnerabilityAssessment import VulnerabilityAssessment
+from app.api.exploiting.Exploiting import Exploiting
 
 router = APIRouter()
 info_gather = InfoGather()  
 vulnerability_assessment = VulnerabilityAssessment()
+exploiting = Exploiting()
+
 
 @router.post("/select_check")   
 async def select_check(request: RequestType):
@@ -55,3 +58,19 @@ async def web_vulnerability_assessment(request: WebRequest):
 async def network_vulnerability_assessment(request: NetworkRequest):
     await vulnerability_assessment.network_vulnerability_assesment(ip_address=request.ip_address)
     return JSONResponse(content={"message": "Vulnerability assessment started. Results will be stored in MongoDB."})
+
+
+@router.post("/network_exploiting")
+async def network_vulnerability_exploiting(request: NetworkRequest):
+     await exploiting.network_vulnerability_exploiting(ip_address=request.ip_address)
+     return JSONResponse(content={"message": "Exploitation started. Results will be stored in MongoDB."})
+
+   
+
+
+
+
+
+
+
+

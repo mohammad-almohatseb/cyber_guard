@@ -24,7 +24,7 @@ async def check_firewall(host: str) -> list[dict]:
                 'host': host,
                 'firewall_detected': None,
                 'error': 'Timeout',
-                'output': None
+                
             }]
 
         output = stdout.decode()
@@ -50,7 +50,7 @@ async def check_firewall(host: str) -> list[dict]:
                 'host': host,
                 'firewall_detected': None,
                 'error': error_msg,
-                'output': output
+                
             }]
 
     except Exception as e:
@@ -59,14 +59,14 @@ async def check_firewall(host: str) -> list[dict]:
             'host': host,
             'firewall_detected': None,
             'error': str(e),
-            'output': None
+           
         }]
 
     return [{
         'host': host,
         'firewall_detected': firewall_detected,
         'error': None,
-        'output': output
+        
     }]
 
 

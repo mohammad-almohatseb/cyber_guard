@@ -1,0 +1,236 @@
+[
+  {
+    "_id": "6855d29b3c12a8969caadada",
+    "detected_services_data": [
+      {},
+      {
+        "target": "192.168.100.3",
+        "service": "ssl/http",
+        "id": "CVE-2004-0700",
+        "description": "Format string vulnerability in the mod_proxy hook functions function in ssl_engine_log.c in mod_ssl before 2.8.19 for Apache before 1.3.31 may allow remote attackers to execute arbitrary messages via format string specifiers in certain log messages for HTTPS that are handled by the ssl_log function.",
+        "cvss_score": 7.5
+      },
+      {
+        "target": "192.168.100.135",
+        "service": "http",
+        "id": "CVE-1999-1207",
+        "description": "Buffer overflow in web-admin tool in NetXRay 2.6 allows remote attackers to cause a denial of service, and possibly execute arbitrary commands, via a long HTTP request.",
+        "cvss_score": 7.5
+      },
+      {
+        "target": "192.168.100.135",
+        "service": "rtsp Apple AirTunes rtspd",
+        "id": "CVE-2003-0725",
+        "description": "Buffer overflow in the RTSP protocol parser for the View Source plug-in (vsrcplin.so or vsrcplin3260.dll) for RealNetworks Helix Universal Server 9 and RealSystem Server 8, 7 and RealServer G2 allows remote attackers to execute arbitrary code.",
+        "cvss_score": 7.5
+      },
+      {},
+      {},
+      {
+        "target": "192.168.100.185",
+        "service": "ftp BusyBox ftpd (D-Link DCS-932L IP-Cam camera)",
+        "id": "CVE-1999-0201",
+        "description": "A quote cwd command on FTP servers can reveal the full path of the home directory of the \"ftp\" user.",
+        "cvss_score": 6.4
+      },
+      {
+        "target": "192.168.100.185",
+        "service": "telnet BusyBox telnetd",
+        "id": "CVE-1999-0192",
+        "description": "Buffer overflow in telnet daemon tgetent routing allows remote attackers to gain root access via the TERMCAP environmental variable.",
+        "cvss_score": 10.0
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "ftp vsftpd 2.3.4",
+        "id": "CVE-1999-0201",
+        "description": "A quote cwd command on FTP servers can reveal the full path of the home directory of the \"ftp\" user.",
+        "cvss_score": 6.4
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "ssh OpenSSH 4.7p1 Debian 8ubuntu1 (protocol 2.0)",
+        "id": "CVE-1999-1159",
+        "description": "SSH 2.0.11 and earlier allows local users to request remote forwarding from privileged ports without being root.",
+        "cvss_score": 4.6
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "telnet Linux telnetd",
+        "id": "CVE-2022-39028",
+        "description": "telnetd in GNU Inetutils through 2.3, MIT krb5-appl through 1.0.3, and derivative works has a NULL pointer dereference via 0xff 0xf7 or 0xff 0xf8. In a typical installation, the telnetd application would crash but the telnet service would remain available through inetd. However, if the telnetd application has many crashes within a short time interval, the telnet service would become unavailable after inetd logs a \"telnet/tcp server failing (looping), service terminated\" error. NOTE: MIT krb5-appl is not supported upstream but is shipped by a few Linux distributions. The affected code was removed from the supported MIT Kerberos 5 (aka krb5) product many years ago, at version 1.8.",
+        "cvss_score": 7.5
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "smtp Postfix smtpd",
+        "id": "CVE-2024-27305",
+        "description": "aiosmtpd is a reimplementation of the Python stdlib smtpd.py based on asyncio. aiosmtpd is vulnerable to inbound SMTP smuggling. SMTP smuggling is a novel vulnerability based on not so novel interpretation differences of the SMTP protocol. By exploiting SMTP smuggling, an attacker may send smuggle/spoof e-mails with fake sender addresses, allowing advanced phishing attacks. This issue is also existed in other SMTP software like Postfix. With the right SMTP server constellation, an attacker can send spoofed e-mails to inbound/receiving aiosmtpd instances. This issue has been addressed in version 1.4.5. Users are advised to upgrade. There are no known workarounds for this vulnerability.",
+        "cvss_score": 5.3
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "domain ISC BIND 9.4.2",
+        "id": "CVE-1999-0505",
+        "description": "A Windows NT domain user or administrator account has a guessable password.",
+        "cvss_score": 7.2
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "http Apache httpd 2.2.8 ((Ubuntu) DAV/2)",
+        "id": "CVE-1999-1207",
+        "description": "Buffer overflow in web-admin tool in NetXRay 2.6 allows remote attackers to cause a denial of service, and possibly execute arbitrary commands, via a long HTTP request.",
+        "cvss_score": 7.5
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "rpcbind 2 (RPC #100000)",
+        "id": "CVE-2001-1124",
+        "description": "rpcbind in HP-UX 11.00, 11.04 and 11.11 allows remote attackers to cause a denial of service (core dump) via a malformed RPC portmap requests, possibly related to a buffer overflow.",
+        "cvss_score": 5.0
+      },
+      {},
+      {},
+      {
+        "target": "192.168.100.194",
+        "service": "exec netkit-rsh rexecd",
+        "id": "CVE-1999-1059",
+        "description": "Vulnerability in rexec daemon (rexecd) in AT&T TCP/IP 4.0 for various SVR4 systems allows remote attackers to execute arbitrary commands.",
+        "cvss_score": 10.0
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "login OpenBSD or Solaris rlogind",
+        "id": "CVE-1999-0180",
+        "description": "in.rshd allows users to login with a NULL username and execute commands.",
+        "cvss_score": 7.5
+      },
+      {
+        "target": "192.168.100.194",
+        "service": "shell Netkit rshd",
+        "id": "CVE-1999-1383",
+        "description": "(1) bash before 1.14.7, and (2) tcsh 6.05 allow local users to gain privileges via directory names that contain shell metacharacters (` back-tick), which can cause the commands enclosed in the directory name to be executed when the shell expands filenames using the \\w option in the PS1 variable.",
+        "cvss_score": 4.6
+      }
+    ],
+    "os_detection_data": [
+      {
+        "target": "192.168.100.53",
+        "os": "linux 4.x|5.x",
+        "id": "CVE-1999-0316",
+        "description": "Buffer overflow in Linux splitvt command gives root access to local users.",
+        "cvss_score": 7.2
+      },
+      {
+        "target": "192.168.100.144",
+        "os": "micropython 1.8",
+        "id": "CVE-2024-8948",
+        "description": "A vulnerability was found in MicroPython 1.23.0. It has been rated as critical. Affected by this issue is the function mpz_as_bytes of the file py/objint.c. The manipulation leads to heap-based buffer overflow. The attack may be launched remotely. The exploit has been disclosed to the public and may be used. The patch is identified as 908ab1ceca15ee6fd0ef82ca4cba770a3ec41894. It is recommended to apply a patch to fix this issue. In micropython objint component, converting zero from int to bytes leads to heap buffer-overflow-write at mpz_as_bytes.",
+        "cvss_score": 7.3
+      },
+      {
+        "target": "192.168.100.152",
+        "os": "micropython 1.8",
+        "id": "CVE-2024-8948",
+        "description": "A vulnerability was found in MicroPython 1.23.0. It has been rated as critical. Affected by this issue is the function mpz_as_bytes of the file py/objint.c. The manipulation leads to heap-based buffer overflow. The attack may be launched remotely. The exploit has been disclosed to the public and may be used. The patch is identified as 908ab1ceca15ee6fd0ef82ca4cba770a3ec41894. It is recommended to apply a patch to fix this issue. In micropython objint component, converting zero from int to bytes leads to heap buffer-overflow-write at mpz_as_bytes.",
+        "cvss_score": 7.3
+      },
+      {
+        "target": "192.168.100.186",
+        "os": "belkin embedded, linux 2.6.x",
+        "id": "CVE-2005-0835",
+        "description": "The SNMP service in the Belkin 54G (F5D7130) wireless router allows remote attackers to cause a denial of service via unknown vectors.",
+        "cvss_score": 5.0
+      },
+      {
+        "target": "192.168.100.194",
+        "os": "ubuntu (from service detection)",
+        "id": "CVE-2006-3378",
+        "description": "passwd command in shadow in Ubuntu 5.04 through 6.06 LTS, when called with the -f, -g, or -s flag, does not check the return code of a setuid call, which might allow local users to gain root privileges if setuid fails in cases such as PAM failures or resource limits.",
+        "cvss_score": 7.2
+      }
+    ],
+    "target": "192.168.100.0/24",
+    "timestamp": "2025-06-20T21:28:59.036000",
+    "waf_cve_data": [
+      {},
+      {},
+      {
+        "target": "192.168.100.6",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.7",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.20",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.52",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.53",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.67",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.90",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {},
+      {
+        "target": "192.168.100.139",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.141",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.144",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.152",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.153",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {},
+      {},
+      {},
+      {},
+      {
+        "target": "192.168.100.189",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      },
+      {
+        "target": "192.168.100.194",
+        "has_waf": "No",
+        "description": "Without a WAF, the system is more vulnerable to attacks like SQLi, XSS, and DDoS due to lack of initial request filtering."
+      }
+    ],
+    "_normalized_target": "unknown_target_1"
+  }
+]
