@@ -4,7 +4,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def scan_open_services(ip: str, port_range="1-1000"):
+async def scan_open_services(ip: str, port_range="1-1000,5900,5432,8180"):
     logger.info(f"[scan_open_services] Starting Nmap scan for: {ip}")
 
     try:
