@@ -47,9 +47,16 @@
         libyaml-dev \
         ruby \
         ruby-dev \
-        build-essential && \
+        build-essential \
+        git && \
+        git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git /opt/sqlmap && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*
+
+    #to run sql map directly
+    RUN ln -s /opt/sqlmap/sqlmap.py /usr/local/bin/sqlmap && \
+    chmod +x /usr/local/bin/sqlmap
+
     
     # ✅ Install Go tools
     RUN go install github.com/lc/gau@latest && \
@@ -62,5 +69,5 @@
     COPY . .
     
     # ✅ Start FastAPI app with Uvicorn
-     #CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    #CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     CMD ["gunicorn", "app.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "8", "--log-level", "info","--timeout", "900"]
