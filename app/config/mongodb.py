@@ -7,7 +7,7 @@ from motor import motor_asyncio
 import logging
 
 from app.api.models.vuln_assessment import NetworkVulnerabilityAssessmentModel, WebVulnerabilityAssessmentModel
-from app.api.models.vuln_exploiting import NetworkVulnerabilityExploitingModel
+from app.api.models.vuln_exploiting import NetworkVulnerabilityExploitingModel, WebVulnerabilityExploitingModel
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,7 +28,8 @@ class MongoDB:
                     NetworkInfoGathering,
                     WebVulnerabilityAssessmentModel,
                     NetworkVulnerabilityAssessmentModel,
-                    NetworkVulnerabilityExploitingModel
+                    NetworkVulnerabilityExploitingModel,
+                    WebVulnerabilityExploitingModel
                 ]
             )
         except Exception as e:

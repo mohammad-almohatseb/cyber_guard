@@ -60,12 +60,18 @@ async def network_vulnerability_assessment(request: NetworkRequest):
     return JSONResponse(content={"message": "Vulnerability assessment started. Results will be stored in MongoDB."})
 
 
+
+@router.post ("/web_exploiting")
+async def web_vulnerability_exploiting(request: WebRequest):
+    await exploiting.web_vulnerability_exploiting(domain=request.domain)
+    return JSONResponse(content={"message": "Exploitation started. Results will be stored in MongoDB."})
+
 @router.post("/network_exploiting")
 async def network_vulnerability_exploiting(request: NetworkRequest):
-     await exploiting.network_vulnerability_exploiting(ip_address=request.ip_address)
-     return JSONResponse(content={"message": "Exploitation started. Results will be stored in MongoDB."})
+    await exploiting.network_vulnerability_exploiting(ip_address=request.ip_address)
+    return JSONResponse(content={"message": "Exploitation started. Results will be stored in MongoDB."})
 
-   
+
 
 
 
