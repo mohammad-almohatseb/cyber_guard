@@ -19,6 +19,7 @@ services:
       - /usr/bin/subfinder:/usr/bin/subfinder
       - /usr/bin/assetfinder:/usr/bin/assetfinder
       - /usr/local/bin/findomain:/usr/bin/findomain
+      - /usr/bin/searchsploit:/usr/bin/searchsploit
   mongodb:
     image: mongo:latest
     container_name: cyberguard_mongodb
