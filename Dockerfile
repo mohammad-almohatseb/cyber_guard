@@ -57,6 +57,11 @@
     RUN ln -s /opt/sqlmap/sqlmap.py /usr/local/bin/sqlmap && \
     chmod +x /usr/local/bin/sqlmap
 
+    RUN apt-get update && apt-get install -y golang
+    RUN go install github.com/tomnomnom/qsreplace@latest
+    ENV PATH="$PATH:/root/go/bin"
+
+
     
     # ✅ Install Go tools
     RUN go install github.com/lc/gau@latest && \
@@ -69,5 +74,5 @@
     COPY . .
     
     # ✅ Start FastAPI app with Uvicorn
-     #CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-    CMD ["gunicorn", "app.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "8", "--log-level", "info","--timeout", "900"]
+    CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    #CMD ["gunicorn", "app.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "8", "--log-level", "info","--timeout", "900"]
