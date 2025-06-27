@@ -3,6 +3,9 @@ from app.config.log_middleware import LoggingMiddleware
 
 from app.api.requests.request_flow import router as request_flow_router
 from app.config.mongodb import db_startup
+import logging
+
+logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 app = FastAPI(
     title="CyberGuard PTaaS",
