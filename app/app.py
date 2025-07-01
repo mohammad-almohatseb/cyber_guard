@@ -3,6 +3,7 @@ from app.config.log_middleware import LoggingMiddleware
 
 from app.api.requests.request_flow import router as request_flow_router
 from app.config.mongodb import db_startup
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 logging.getLogger("pymongo").setLevel(logging.WARNING)
@@ -14,8 +15,21 @@ app = FastAPI(
 )
 
 
-app.include_router(request_flow_router, prefix="/api", tags=["Request Flow"])
+app.include_router(request_flow_router, tags=["Request Flow"])
 app.add_middleware(LoggingMiddleware)
+
+
+origins = [
+    "http://localhost:5173",   
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],       
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():
