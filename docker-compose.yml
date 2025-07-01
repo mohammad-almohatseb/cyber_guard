@@ -1,27 +1,35 @@
-
+version: "3.9"
 
 services:
+  # ────────────────────────────────────────────────────────────────
+  # FastAPI application container
+  # ────────────────────────────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi_app
     ports:
-      - "8000:8000"
+      - "8000:8000"                 # FastAPI exposed on host:8000
     networks:
       - app-network
     depends_on:
       - mongodb
     environment:
       MONGO_URI: mongodb://admin:password@mongodb:27017/cyberguard?authSource=admin
+      MODEL_API_URL: http://host.docker.internal:8080/chat   # ← talk to model on host
+    # Linux only: map host-gateway to host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - .:/app
       - /usr/bin/subfinder:/usr/bin/subfinder
       - /usr/bin/assetfinder:/usr/bin/assetfinder
       - /usr/local/bin/findomain:/usr/bin/findomain
-      - /usr/bin/searchsploit:/usr/bin/searchsploit
-      
 
+  # ────────────────────────────────────────────────────────────────
+  # MongoDB container
+  # ────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:latest
     container_name: cyberguard_mongodb
@@ -31,15 +39,25 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: cyberguard
-    command: mongod --wiredTigerCacheSizeGB 1 --logpath /var/log/mongodb/mongod.log --logappend --setParameter logLevel=1
+    command: >
+      mongod --wiredTigerCacheSizeGB 1
+             --logpath /var/log/mongodb/mongod.log
+             --logappend
+             --setParameter logLevel=1
     volumes:
       - mongodb_data:/data/db
     networks:
       - app-network
 
+# ──────────────────────────────────────────────────────────────────
+# Shared bridge network
+# ──────────────────────────────────────────────────────────────────
 networks:
   app-network:
     driver: bridge
 
+# ──────────────────────────────────────────────────────────────────
+# Named volume for persistent MongoDB data
+# ──────────────────────────────────────────────────────────────────
 volumes:
   mongodb_data:
