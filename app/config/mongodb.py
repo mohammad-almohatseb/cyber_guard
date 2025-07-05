@@ -13,7 +13,7 @@ from app.api.models.vuln_exploiting import NetworkVulnerabilityExploitingModel, 
 logging.basicConfig(level=logging.INFO)
 
 class MongoDB:
-    @staticmethod
+
     async def init_db():
         try:
             client = motor_asyncio.AsyncIOMotorClient(
@@ -24,23 +24,25 @@ class MongoDB:
             await init_beanie(
                 database=db,
                 document_models=[
+                    AiCollection,
                     WebInfoGatheringModel,
                     NetworkInfoGathering,
                     WebVulnerabilityAssessmentModel,
                     NetworkVulnerabilityAssessmentModel,
                     NetworkVulnerabilityExploitingModel,
-                    WebVulnerabilityExploitingModel,
-                    AiCollection
+                    WebVulnerabilityExploitingModel
                 ]
             )
         except Exception as e:
             logging.error(f"MongoDB connection failed: {e}")
             raise  
 
+mongo=MongoDB.init_db()
+
 @asynccontextmanager
 async def db_startup(app: FastAPI):
     try:
-        await MongoDB.init_db()
+        await mongo
         logging.info("MongoDB connected successfully!")
     except Exception as e:
         logging.error(f"MongoDB connection failed: {e}")

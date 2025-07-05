@@ -173,7 +173,7 @@ async def web_ai_risk_report(req: AIRiskRequest):
     try:
         prompt = await build_web_prompt(domain)
         result = await _call_llm(prompt)
-        _store_report("web", domain, prompt, result)
+        await _store_report("web", domain, prompt, result)
         return JSONResponse({"output": result})
     except Exception as e:
         raise HTTPException(502, f"Risk report error: {e}")
@@ -187,7 +187,7 @@ async def network_ai_risk_report(req: NetworkAIRiskRequest):
     try:
         prompt = await build_network_prompt(ip)
         result = await _call_llm(prompt)
-        _store_report("network", ip, prompt, result)
+        await _store_report("network", ip, prompt, result)
         return JSONResponse({"output": result})
     except Exception as e:
         raise HTTPException(502, f"Risk report error: {e}")
