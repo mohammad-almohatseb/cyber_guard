@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 # Expanded keyword lists
 sensitive_js_keywords = ['config', 'auth', 'token', 'secret', 'key', 'admin']
+
 injectable_params = [
     'id', 'uid', 'pid', 'ref', 'cat', 'cid', 'product', 'item', 'order', 'page', 'record', 'doc', 'post',
     'q', 'query', 'search', 'keyword', 'message', 'comment', 'feedback', 'input', 'email', 'name', 'title', 'desc', 'text',
@@ -15,19 +16,15 @@ injectable_params = [
     'redirect', 'next', 'dest', 'destination', 'continue', 'return', 'goto',
     'include', 'template', 'folder', 'module', 'load'
 ]
+
 redirect_keywords = [
     'redirect', 'url', 'next', 'dest', 'destination', 'continue', 'return', 'goto',
     'redir', 'redirect_url', 'redirect_uri', 'redirect_to', 'back', 'callback',
     'ret', 'out', 'navigation', 'ref', 'forward', 'jump', 'move', 'target', 'view', 'path'
 ]
+
 redirect_path_keywords = ['redirect', 'goto', 'jump', 'forward', 'return', 'out', 'nav']
 
-# Helper to normalize
-def normalize_url(url):
-    parsed = urlparse(url)
-    query_params = parse_qs(parsed.query)
-    normalized_query = urlencode({k: "" for k in sorted(query_params)}, doseq=True)
-    return parsed._replace(query=normalized_query).geturl()
 
 # Category checks
 async def is_login_url(url):
@@ -40,13 +37,16 @@ async def is_injectable_url(url):
     parsed = urlparse(url)
     if not parsed.scheme.startswith("http") or not parsed.query:
         return False
-    qs = parse_qs(parsed.query)
-    return any(param in qs and all(v.strip() for v in qs[param]) for param in injectable_params)
+    qs = parse_qs(parsed.query)   # is dictionary like {'id': ['5'], 'sort': ['asc']}
+
+    return any(param in qs and all(v.strip() for v in qs[param]) for param in injectable_params)  
+
+
+
 
 async def is_redirect_url(url):
     parsed = urlparse(url)
-    qs = parse_qs(parsed.query)
-
+    qs = parse_qs(parsed.query)   
     # Check query parameters
     for param, values in qs.items():
         if param.lower() in redirect_keywords:
@@ -61,6 +61,13 @@ async def is_redirect_url(url):
         return True
 
     return False
+
+# Helper to normalize ..to give me the injectable urls without duplicates and to show only the parametres without it's value like "https://x.com/product?id=&sort="
+def normalize_url(url):
+    parsed = urlparse(url)
+    query_params = parse_qs(parsed.query)
+    normalized_query = urlencode({k: "" for k in sorted(query_params)}, doseq=True)   
+    return parsed._replace(query=normalized_query).geturl()
 
 # Process each URL
 async def process_url(url, seen_normalized, results):

@@ -12,9 +12,6 @@ from app.ai_model.web.build_web_prompt_from_docs import build_prompt_from_docs
 
 logger = logging.getLogger(__name__)
 
-# ──────────────────────────────────────────────────────────────
-# Public API
-# ──────────────────────────────────────────────────────────────
 async def build_web_prompt(domain: str) -> str:  # noqa: D401
     """Return a fully‑formed prompt for *domain* ready for the LLM."""
 
@@ -29,9 +26,6 @@ async def build_web_prompt(domain: str) -> str:  # noqa: D401
     logger.debug("[PROMPT for %s]\n%s", domain, prompt)
     return prompt
 
-# ──────────────────────────────────────────────────────────────
-# Internal helpers
-# ──────────────────────────────────────────────────────────────
 async def _fetch_latest_docs(
     domain: str,
 ) -> Tuple[

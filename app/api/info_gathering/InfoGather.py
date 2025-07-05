@@ -58,14 +58,6 @@ class InfoGather:
             return {"status": "scan_error", "domain": domain}
 
         try:
-            all_injectables_nested = [item.get("injectable_urls", []) for item in archive_urls]
-            all_injectables = [url for sublist in all_injectables_nested for url in sublist]
-            logger.debug(f"[WebScan] Extracted injectable URLs: {len(all_injectables)}")
-        except Exception as e:
-            logger.warning(f"[WebScan] Error extracting injectable URLs: {e}")
-            all_injectables = []
-
-        try:
             web_info = WebInfoGatheringModel(
                 target=domain,
                 target_type="web",

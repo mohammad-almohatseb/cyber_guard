@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from beanie import init_beanie
+from app.api.models.ai_collection import AiCollection
 from app.api.models.information import WebInfoGatheringModel  
 from app.api.models.information import NetworkInfoGathering
 from fastapi import FastAPI
@@ -20,7 +21,6 @@ class MongoDB:
             )
             db = client.cyberguard
 
-            # Initialize Beanie ODM with the document model(s)
             await init_beanie(
                 database=db,
                 document_models=[
@@ -29,7 +29,8 @@ class MongoDB:
                     WebVulnerabilityAssessmentModel,
                     NetworkVulnerabilityAssessmentModel,
                     NetworkVulnerabilityExploitingModel,
-                    WebVulnerabilityExploitingModel
+                    WebVulnerabilityExploitingModel,
+                    AiCollection
                 ]
             )
         except Exception as e:

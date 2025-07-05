@@ -16,7 +16,7 @@ async def run_tool(command):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
-        stdout, stderr = await process.communicate()
+        stdout, stderr = await process.communicate()   # process.communicate() waits until the program exits and then returns a tuple of bytes: what was written to stdout and to stderr.
         if process.returncode == 0:
             return stdout.decode().splitlines()
         else:

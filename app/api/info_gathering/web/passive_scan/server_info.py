@@ -22,20 +22,20 @@ async def fetch_server_header(session, subdomain):
     return subdomain, "", "", ""
 
 # Parse server product and version
-async def parse_server_info(header: str):
-    if not header:
+async def parse_server_info(header: str):            
+    if not header:                                         
         return "Unknown", "Unknown"
 
     match = re.match(r"([^\s/]+)(?:/([\d\.]+))?", header)
     if match:
         product = match.group(1)
-        version = match.group(2) if match.group(2) else "Unknown"
+        version = match.group(2) if match.group(2) else "Unknown"     
         return product, version
     return header, "Unknown"
 
 # Guess OS and version from all headers
 async def guess_os(*headers):
-    combined = " ".join(h.lower() for h in headers if h)
+    combined = " ".join(h.lower() for h in headers if h)  # combined will be like: "apache/2.4.57 (ubuntu) x-powered-by: php/8.1.2 via: 1.1 varnish (debian)"
 
     if "windows" in combined:
         version = re.search(r"windows\s?(server\s?\d+|[\d\.]+)?", combined)
@@ -54,7 +54,7 @@ async def scan_subdomain(session, subdomain):
     sub, server_header, powered_by, via = await fetch_server_header(session, subdomain)
     all_headers = [server_header, powered_by, via]
 
-    main_header = next((h for h in all_headers if h), "")
+    main_header = next((h for h in all_headers if h), "")         # h is header from all headers --> we try to return the first truth header not (none, "" or empty value)
     product, version = await parse_server_info(main_header)
     os_name, os_version = await guess_os(*all_headers)
 

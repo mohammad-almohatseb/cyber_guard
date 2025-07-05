@@ -1,12 +1,14 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from datetime import datetime, timezone
+from beanie import Document, PydanticObjectId
+from pydantic import Field
 
-MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb://admin:password@mongodb:27017/cyberguard?authSource=admin",
-)
+from app.api.models.BaseModelNoNone import BaseModelNoNone
 
-mongo = AsyncIOMotorClient(MONGO_URI).get_default_database()
 
-# Expose any collections that need to be shared
-AI_RISK_REPORT = mongo["ai_risk_reports"]
+class AiCollection(Document,BaseModelNoNone):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    report_type: str
+    target: str
+    prompt: str
+    resutlt: dict
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

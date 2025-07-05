@@ -98,8 +98,8 @@ async def enumerate_directories(subdomain: str) -> list[dict]:
 async def enum_dir_on_subdomains(subdomains: list[str]) -> list[str]:
     final_urls = []
     tasks = [enumerate_directories(sub) for sub in subdomains]
-    all_results = await asyncio.gather(*tasks)
-
+    all_results = await asyncio.gather(*tasks)                 # all results will be [results , results, results, ...] for each subdomain
+                                                                # dict will be like {path: /admin, status: 200 , url: https://subdomain/admin} 
     for paths in all_results:
         for result in paths:
             if result and "url" in result:

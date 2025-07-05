@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import httpx
 from fastapi import APIRouter, HTTPException, status, Body, Query
 from fastapi.responses import JSONResponse
-from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 
 from app.ai_model.web.web_build_prompt import build_web_prompt
 from app.ai_model.network.network_build_prompt import build_network_prompt
 from app.ai_model.gemini.gen_ai_google import generate_content
 
-from app.api.models.ai_collection import AI_RISK_REPORT
+from app.api.models.ai_collection import AiCollection
 from app.api.schemas.base_request import RequestType
 from app.api.schemas.ip_domain_requests import WebRequest, NetworkRequest
 from app.api.info_gathering.InfoGather import InfoGather
@@ -24,13 +22,6 @@ from app.api.vulnerability_assesment.VulnerabilityAssessment import Vulnerabilit
 from app.api.exploiting.Exploiting import Exploiting
 
 MODEL_API_URL = os.getenv("MODEL_API_URL", "http://host.docker.internal:8080/chat")
-MONGO_URI = os.getenv(
-    "MONGO_URI", "mongodb://admin:password@mongodb:27017/cyberguard?authSource=admin"
-)
-
-logger = logging.getLogger(__name__)
-
-mongo = AsyncIOMotorClient(MONGO_URI).get_default_database()
 router = APIRouter(prefix="/api")
 
 info_gather = InfoGather()
@@ -118,16 +109,15 @@ async def _call_llm(prompt: str) -> Dict[str, Any]:
         resp.raise_for_status()
     return _extract_json(resp.text)
 
-AI_RISK_REPORT = mongo["ai_risk_reports"]
 
-def _store_report(report_type: str, target: str, prompt: str, result: Dict[str, Any]):
-    AI_RISK_REPORT.insert_one({
-        "report_type": report_type,
-        "target": target,
-        "prompt": prompt,
-        "result": result,
-        "created_at": datetime.now(timezone.utc),
-    })
+async def _store_report(report_type: str, target: str, prompt: str, result: Dict[str, Any]):
+    ai_collection = AiCollection(
+        report_type=report_type,
+        target=target,
+        prompt=prompt,
+        resutlt=result
+    )
+    await ai_collection.save()
 
 @router.post("/select_check")
 async def select_check(request: RequestType):
@@ -179,14 +169,13 @@ async def web_ai_risk_report(req: AIRiskRequest):
     domain = req.domain.strip()
     if not domain:
         raise HTTPException(400, "Domain cannot be empty")
-    logger.info("Processing risk report for domain: %s", domain)
+    
     try:
         prompt = await build_web_prompt(domain)
         result = await _call_llm(prompt)
         _store_report("web", domain, prompt, result)
         return JSONResponse({"output": result})
     except Exception as e:
-        logger.error("Risk report failed: %s", e)
         raise HTTPException(502, f"Risk report error: {e}")
 
 @router.post("/network_ai_risk_report", response_class=JSONResponse)
@@ -194,14 +183,13 @@ async def network_ai_risk_report(req: NetworkAIRiskRequest):
     ip = req.ip_address.strip()
     if not ip:
         raise HTTPException(400, "IP address cannot be empty")
-    logger.info("Processing risk report for network: %s", ip)
+    
     try:
         prompt = await build_network_prompt(ip)
         result = await _call_llm(prompt)
         _store_report("network", ip, prompt, result)
         return JSONResponse({"output": result})
     except Exception as e:
-        logger.error("Risk report failed: %s", e)
         raise HTTPException(502, f"Risk report error: {e}")
 
 @router.post("/web_gemini", status_code=status.HTTP_200_OK)
@@ -210,86 +198,36 @@ async def web_gemini(
     domain: str | None = Query(None, alias="content", description="Domain if no body sent"),
 ):
     """Generate a web application penetration test report using Gemini AI"""
-    logger.info("=== WEB GEMINI ENDPOINT CALLED ===")
     
     try:
         # Handle request parameters
         if req is None:
             if domain is None:
-                logger.error("No domain provided in request")
                 raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Domain required")
             req = GeminiWebRequest(domain=domain)
 
-        logger.info(f"Processing Gemini web report for domain: {req.domain}")
+        # Import required modules
+        from app.ai_model.gemini.get_webdata import get_webtarget_data, build_gemini_web_prompt, PromptConfig
 
-        # Test 1: Check if imports work
-        try:
-            logger.info("Testing imports...")
-            from app.ai_model.gemini.get_webdata import get_webtarget_data, build_gemini_web_prompt, PromptConfig
-            logger.info("✓ Imports successful")
-        except ImportError as e:
-            logger.error(f"✗ Import failed: {e}")
-            raise HTTPException(500, f"Import error: {e}")
+        # Get web target data
+        data = await get_webtarget_data(req.domain)
+        operational = data["operational"]
+        
+        # Configure prompt settings
+        cfg = PromptConfig(
+            executive_summary_words=req.executive_summary_words or 200,
+            include_raw_block=req.include_raw_block if req.include_raw_block is not None else False,
+            extra_sections=req.extra_sections or [],
+        )
+        
+        # Build the prompt and call Gemini
+        prompt = build_gemini_web_prompt(operational, cfg=cfg)
+        llm_resp = await generate_content(model="gemini-2.5-pro", contents=prompt)
+        
+        # Extract report content
+        report_md = llm_resp.get("text") or llm_resp.get("content") or "# Error: Empty response from AI model"
 
-        # Test 2: Get web target data
-        try:
-            logger.info(f"Getting web target data for: {req.domain}")
-            data = await get_webtarget_data(req.domain)
-            logger.info(f"✓ Web target data retrieved: {list(data.keys())}")
-            operational = data["operational"]
-            logger.info(f"✓ Operational data keys: {list(operational.keys())}")
-        except Exception as e:
-            logger.error(f"✗ Failed to get web target data: {e}")
-            raise HTTPException(500, f"Data retrieval error: {e}")
-        
-        # Test 3: Configure prompt settings
-        try:
-            cfg = PromptConfig(
-                executive_summary_words=req.executive_summary_words or 200,
-                include_raw_block=req.include_raw_block if req.include_raw_block is not None else False,
-                extra_sections=req.extra_sections or [],
-            )
-            logger.info("✓ PromptConfig created")
-        except Exception as e:
-            logger.error(f"✗ PromptConfig failed: {e}")
-            raise HTTPException(500, f"Config error: {e}")
-        
-        # Test 4: Build the prompt
-        try:
-            prompt = build_gemini_web_prompt(operational, cfg=cfg)
-            logger.info(f"✓ Prompt built, length: {len(prompt)} characters")
-            logger.debug(f"Prompt preview: {prompt[:200]}...")
-        except Exception as e:
-            logger.error(f"✗ Prompt building failed: {e}")
-            raise HTTPException(500, f"Prompt error: {e}")
-
-        # Test 5: Generate content using Gemini
-        try:
-            logger.info("Calling Gemini API...")
-            model_name = "gemini-2.5-pro"
-            
-            # Check if generate_content function exists
-            if not hasattr(generate_content, '__call__'):
-                raise HTTPException(500, "generate_content is not callable")
-                
-            llm_resp = await generate_content(model=model_name, contents=prompt)
-            logger.info(f"✓ Gemini response received: {type(llm_resp)}")
-            logger.info(f"Response keys: {list(llm_resp.keys()) if isinstance(llm_resp, dict) else 'Not a dict'}")
-        except Exception as e:
-            logger.error(f"✗ Gemini API call failed: {e}")
-            raise HTTPException(500, f"Gemini error: {e}")
-        
-        # Test 6: Extract the report content
-        report_md = llm_resp.get("text") or llm_resp.get("content") or ""
-        
-        if not report_md:
-            logger.warning("Empty response from Gemini model")
-            logger.info(f"Full LLM response: {llm_resp}")
-            report_md = "# Error: Empty response from AI model"
-        else:
-            logger.info(f"✓ Report generated, length: {len(report_md)} chars")
-
-        # Test 7: Build response
+        # Build response
         response_data = {
             "domain": req.domain,
             "meta": data.get("meta", {}),
@@ -297,16 +235,11 @@ async def web_gemini(
             "llm_raw": llm_resp,
         }
         
-        logger.info("✓ Response data built successfully")
-        logger.info("=== WEB GEMINI ENDPOINT COMPLETED ===")
-        
         return JSONResponse(status_code=status.HTTP_200_OK, content=response_data)
         
     except HTTPException:
-        logger.error("HTTPException raised, re-raising")
         raise
     except Exception as exc:
-        logger.exception(f"Unexpected error in Web Gemini endpoint: {exc}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, 
             detail=f"Gemini model error: {str(exc)}"
@@ -318,86 +251,36 @@ async def network_gemini(
     ip_address: str | None = Query(None, alias="content", description="IP address if no body sent"),
 ):
     """Generate a network penetration test report using Gemini AI"""
-    logger.info("=== NETWORK GEMINI ENDPOINT CALLED ===")
     
     try:
         # Handle request parameters
         if req is None:
             if ip_address is None:
-                logger.error("No IP address provided in request")
                 raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "IP address required")
             req = GeminiNetworkRequest(ip_address=ip_address)
 
-        logger.info(f"Processing Gemini network report for IP: {req.ip_address}")
+        # Import required modules
+        from app.ai_model.gemini.get_networkdata import get_networktarget_data, build_gemini_network_prompt, PromptConfig
 
-        # Test 1: Check if imports work
-        try:
-            logger.info("Testing imports...")
-            from app.ai_model.gemini.get_networkdata import get_networktarget_data, build_gemini_network_prompt, PromptConfig
-            logger.info("✓ Imports successful")
-        except ImportError as e:
-            logger.error(f"✗ Import failed: {e}")
-            raise HTTPException(500, f"Import error: {e}")
+        # Get network target data
+        data = await get_networktarget_data(req.ip_address)
+        operational = data["operational"]
+        
+        # Configure prompt settings
+        cfg = PromptConfig(
+            executive_summary_words=req.executive_summary_words or 200,
+            include_raw_block=req.include_raw_block if req.include_raw_block is not None else False,
+            extra_sections=req.extra_sections or [],
+        )
+        
+        # Build the prompt and call Gemini
+        prompt = build_gemini_network_prompt(operational, cfg=cfg)
+        llm_resp = await generate_content(model="gemini-2.5-pro", contents=prompt)
+        
+        # Extract report content
+        report_md = llm_resp.get("text") or llm_resp.get("content") or "# Error: Empty response from AI model"
 
-        # Test 2: Get network target data
-        try:
-            logger.info(f"Getting network target data for: {req.ip_address}")
-            data = await get_networktarget_data(req.ip_address)
-            logger.info(f"✓ Network target data retrieved: {list(data.keys())}")
-            operational = data["operational"]
-            logger.info(f"✓ Operational data keys: {list(operational.keys())}")
-        except Exception as e:
-            logger.error(f"✗ Failed to get network target data: {e}")
-            raise HTTPException(500, f"Data retrieval error: {e}")
-        
-        # Test 3: Configure prompt settings
-        try:
-            cfg = PromptConfig(
-                executive_summary_words=req.executive_summary_words or 200,
-                include_raw_block=req.include_raw_block if req.include_raw_block is not None else False,
-                extra_sections=req.extra_sections or [],
-            )
-            logger.info("✓ PromptConfig created")
-        except Exception as e:
-            logger.error(f"✗ PromptConfig failed: {e}")
-            raise HTTPException(500, f"Config error: {e}")
-        
-        # Test 4: Build the prompt
-        try:
-            prompt = build_gemini_network_prompt(operational, cfg=cfg)
-            logger.info(f"✓ Prompt built, length: {len(prompt)} characters")
-            logger.debug(f"Prompt preview: {prompt[:200]}...")
-        except Exception as e:
-            logger.error(f"✗ Prompt building failed: {e}")
-            raise HTTPException(500, f"Prompt error: {e}")
-
-        # Test 5: Generate content using Gemini
-        try:
-            logger.info("Calling Gemini API...")
-            model_name = "gemini-2.5-pro"
-            
-            # Check if generate_content function exists
-            if not hasattr(generate_content, '__call__'):
-                raise HTTPException(500, "generate_content is not callable")
-                
-            llm_resp = await generate_content(model=model_name, contents=prompt)
-            logger.info(f"✓ Gemini response received: {type(llm_resp)}")
-            logger.info(f"Response keys: {list(llm_resp.keys()) if isinstance(llm_resp, dict) else 'Not a dict'}")
-        except Exception as e:
-            logger.error(f"✗ Gemini API call failed: {e}")
-            raise HTTPException(500, f"Gemini error: {e}")
-        
-        # Test 6: Extract the report content
-        report_md = llm_resp.get("text") or llm_resp.get("content") or ""
-        
-        if not report_md:
-            logger.warning("Empty response from Gemini model")
-            logger.info(f"Full LLM response: {llm_resp}")
-            report_md = "# Error: Empty response from AI model"
-        else:
-            logger.info(f"✓ Report generated, length: {len(report_md)} chars")
-
-        # Test 7: Build response
+        # Build response
         response_data = {
             "ip_address": req.ip_address,
             "meta": data.get("meta", {}),
@@ -405,16 +288,11 @@ async def network_gemini(
             "llm_raw": llm_resp,
         }
         
-        logger.info("✓ Response data built successfully")
-        logger.info("=== NETWORK GEMINI ENDPOINT COMPLETED ===")
-        
         return JSONResponse(status_code=status.HTTP_200_OK, content=response_data)
         
     except HTTPException:
-        logger.error("HTTPException raised, re-raising")
         raise
     except Exception as exc:
-        logger.exception(f"Unexpected error in Network Gemini endpoint: {exc}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, 
             detail=f"Gemini model error: {str(exc)}"

@@ -4,14 +4,15 @@ import asyncio
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Tuple,Union
+from textwrap import dedent
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, ValidationError, validator
 # ── ODM models ─────────────────────────────────────────────────────────────
+from app.api.models.ai_collection import AiCollection
 from app.api.models.information import WebInfoGatheringModel
 from app.api.models.vuln_assessment import WebVulnerabilityAssessmentModel
 from app.api.models.vuln_exploiting import WebVulnerabilityExploitingModel
-from app.api.models.ai_collection import AI_RISK_REPORT
 
 __all__ = [
     "get_webtarget_data",
@@ -72,7 +73,7 @@ _FIELD_MAP: Dict[Any, Tuple[str, ...]] = {
     WebInfoGatheringModel: ("target", "domain", "host", "url"),
     WebVulnerabilityAssessmentModel: ("target", "domain", "host"),
     WebVulnerabilityExploitingModel: ("target", "domain", "host"),
-    AI_RISK_REPORT: ("target", "domain", "host"),
+    AiCollection: ("target", "domain", "host"),
 }
 
 
@@ -286,26 +287,7 @@ def _extract_exploitation_data(exploit_doc: Any) -> Tuple[List[str], bool, List[
 
 # ═══════════════════════════════════════
 # 3 ▸ Aggregation API
-# ═══════════════════════════════════════
-
-def _severity(cvss: float, cfg: PromptConfig) -> str:
-    for rng, sev in cfg.severity_map.items():
-        lo, hi = map(float, rng.split("-"))
-        if lo <= cvss <= hi:
-            return sev
-    return "Unknown"
-
-
-def _bullets(lines: List[str]) -> str:
-    return "  - N/A" if not lines else "\n".join(f"  - {l}" for l in lines)
-
-
-def _headers_md(headers: Dict[str, str]) -> str:
-    if not headers:
-        return "  - N/A"
-    return "\n".join(
-        f"  - {k}: {str(v)[:100]}{'…' if len(str(v)) > 100 else ''}" for k, v in headers.items()
-    )
+# ══════════════════════════════════════
 
 
 async def get_webtarget_data(domain: str) -> Dict[str, Any]:
@@ -315,7 +297,7 @@ async def get_webtarget_data(domain: str) -> Dict[str, Any]:
         _find_doc(WebInfoGatheringModel, domain),
         _find_doc(WebVulnerabilityAssessmentModel, domain),
         _find_doc(WebVulnerabilityExploitingModel, domain),
-        _find_doc(AI_RISK_REPORT, domain),
+        _find_doc(AiCollection, domain),
     )
 
     if not any([info, vuln, explo, risk]):
@@ -366,176 +348,6 @@ async def get_webtarget_data(domain: str) -> Dict[str, Any]:
         },
     }
 
-def build_gemini_web_prompt(
-    operational: Union[Dict[str, Any], "OperationalData"],
-    cfg: "PromptConfig" | None = None,
-    risk_ai_data: Dict[str, Any] | None = None,
-) -> str:
-    """
-    Generate a professional cybersecurity report prompt that produces clean,
-    properly formatted markdown without formatting issues.
-    """
-    cfg = cfg or PromptConfig()
-    op: Dict[str, Any] = (
-        operational.dict() if isinstance(operational, OperationalData) else operational
-    )
-
-    # ── Report metadata ─────────────────────────────────────────
-    report_date = datetime.utcnow().strftime("%B %d, %Y")
-    report_id = f"WSR-{datetime.utcnow().strftime('%Y%m%d')}-{op['domain'].replace('.', '')[:8].upper()}"
-    
-    # ── Clean technical data formatting ──────────────────────────
-    tech_summary = _create_clean_tech_summary(op, risk_ai_data)
-    
-    # ── Professional instruction prompt ──────────────────────────
-    professional_prompt = f"""You are a Senior Cybersecurity Consultant creating an enterprise-grade security assessment report.
-
-CRITICAL FORMATTING REQUIREMENTS:
-- Use ONLY proper markdown syntax
-- NO literal \\n characters in output
-- NO escaped characters or formatting artifacts
-- Clean, readable professional formatting
-- Proper spacing and line breaks
-
-TARGET INFORMATION:
-- Domain: {op['domain']}
-- Report ID: {report_id}
-- Assessment Date: {report_date}
-- Overall Risk Score: {op['cvss']} ({_severity(op['cvss'], cfg)})
-- WAF Status: {op['waf']}
-
-TECHNICAL DATA TO USE:
-{tech_summary}
-
-CREATE A PROFESSIONAL REPORT FOLLOWING THIS EXACT STRUCTURE:
-
-# Web Application Security Assessment Report
-
-## Report Information
-| Field | Value |
-|-------|-------|
-| Target Domain | {op['domain']} |
-| Report ID | {report_id} |
-| Assessment Date | {report_date} |
-| Prepared By | CyberGuard Security Team |
-| Classification | CONFIDENTIAL |
-
----
-
-## Executive Summary
-
-Write a 150-word executive summary covering:
-- Overall security posture assessment
-- Number of vulnerabilities by severity
-- Key business risks identified
-- Priority recommendations
-
-## Assessment Overview
-
-### Scope
-Detail what was tested and any limitations.
-
-### Methodology
-Our assessment followed:
-- OWASP Web Security Testing Guide v4.2
-- NIST Cybersecurity Framework
-- Industry best practices
-
-### Tools & Timeline
-List primary tools and assessment duration.
-
-## Technical Infrastructure
-
-### Technology Stack
-Present identified technologies in a clean table format.
-
-### Security Posture
-Analyze WAF status and security headers.
-
-## Risk Assessment Summary
-
-### Overall Risk Rating
-Provide clear risk rating with justification.
-
-### Vulnerability Summary
-| Severity | Count | CVSS Range | Priority |
-|----------|--------|------------|----------|
-| Critical | X | 9.0-10.0 | Immediate |
-| High | X | 7.0-8.9 | Urgent |
-| Medium | X | 4.0-6.9 | Important |
-| Low | X | 0.1-3.9 | Monitor |
-
-## Detailed Findings
-
-For each vulnerability found, create a section like this:
-
-### Finding X: [Vulnerability Name]
-
-**Severity:** [Level] | **CVSS:** [Score]
-
-**Description:**
-Clear technical description of the vulnerability.
-
-**Business Impact:**
-Explain real-world consequences.
-
-**Technical Evidence:**
-```
-Include relevant technical proof
-```
-
-**Remediation:**
-1. Immediate actions required
-2. Long-term solutions needed
-
-## Exploitation Summary
-
-Detail any successful exploits and their impact.
-
-## Remediation Roadmap
-
-### Immediate Actions (0-30 days)
-List critical fixes.
-
-### Short-term Actions (30-90 days)
-List important fixes.
-
-### Long-term Improvements (90+ days)
-List strategic security enhancements.
-
-## Conclusion
-
-Summarize key findings and strategic recommendations.
-
-## Appendices
-
-### Technical Details
-Additional technical information as needed.
-
-### References
-List standards and frameworks referenced.
-
----
-
-FORMATTING RULES YOU MUST FOLLOW:
-1. Use proper markdown headers (# ## ###)
-2. Create clean tables with proper alignment
-3. Use code blocks with language tags when appropriate
-4. NO literal \\n characters - use proper line breaks
-5. Keep consistent spacing throughout
-6. Use bullet points and numbered lists appropriately
-7. Include severity badges using text (Critical, High, Medium, Low)
-8. Make all content professional and readable
-
-Base ALL content on the technical data provided. Do NOT invent information.
-If data is missing, state "Information not available in current assessment."
-
-Create a clean, professional report that executives and technical teams can both understand and act upon."""
-
-    logger.debug(f"Clean professional prompt generated for {op['domain']}")
-    return professional_prompt
-
-
 def _create_clean_tech_summary(op: Dict[str, Any], risk_ai_data: Dict[str, Any] = None) -> str:
     """Create a clean, formatted technical summary without formatting artifacts."""
     
@@ -584,6 +396,8 @@ def _create_clean_tech_summary(op: Dict[str, Any], risk_ai_data: Dict[str, Any] 
     return "\n".join(summary_parts)
 
 
+
+
 def _severity(cvss: float, cfg: "PromptConfig") -> str:
     """Convert CVSS score to severity level."""
     if cvss >= 9.0:
@@ -597,93 +411,50 @@ def _severity(cvss: float, cfg: "PromptConfig") -> str:
     else:
         return "Informational"
 
-
-# Alternative simplified prompt for better results
-def build_simple_professional_prompt(
+def build_gemini_web_prompt(
     operational: Union[Dict[str, Any], "OperationalData"],
     cfg: "PromptConfig" | None = None,
     risk_ai_data: Dict[str, Any] | None = None,
 ) -> str:
-    """
-    Simplified version that focuses on clean output without complex formatting.
-    """
-    cfg = cfg or PromptConfig()
-    op: Dict[str, Any] = (
-        operational.dict() if isinstance(operational, OperationalData) else operational
-    )
+    professional_prompt = """
+Create a professional cybersecurity assessment report in HTML format. Follow these STRICT rules:
 
-    # Simple, clean data presentation
-    vuln_summary = ""
-    if op.get('issues'):
-        vuln_summary = f"Found {len(op['issues'])} vulnerabilities"
-    
-    exploit_summary = ""
-    if op.get('exploits'):
-        exploit_summary = f"Successfully exploited {len(op['exploits'])} vulnerabilities"
+CRITICAL FORMATTING REQUIREMENTS:
+1. Output ONLY HTML content - NO markdown, NO \\n characters, NO literal newlines
+2. Use proper HTML structure with <p>, <div>, <br>, <ul>, <ol> tags
+3. All styling must use inline Tailwind classes
+4. Replace every placeholder with realistic content
+5. Use professional cybersecurity terminology
+6. I don't see /n in the output.
+7. you should know your output will be rendered in a browser. without filtering 
+8. I need a professional report, not a copy-paste from a blog post.
+9. I need a professional design 
+DESIGN REQUIREMENTS:
+- Modern dark theme with proper contrast
+- Professional typography and spacing
+- Responsive tables and code blocks
+- Clean, executive-level presentation
 
-    return f"""Create a professional cybersecurity report in clean markdown format.
+CONTENT STRUCTURE:
+Generate a complete HTML report with these sections filled with detailed, realistic content:
 
-STRICT FORMATTING REQUIREMENTS:
-- Use proper markdown syntax only
-- No escaped characters or \\n literals
-- Clean tables and headers
-- Professional business language
+the most important thing I don't want see /n in the output.
+make the design professional.
+please without /n in the output.
 
-REPORT DATA:
-Domain: {op['domain']}
-CVSS Score: {op['cvss']} ({_severity(op['cvss'], cfg)} severity)
-WAF Detected: {op['waf']}
-Technologies: {', '.join(op.get('technologies', ['None identified']))}
-{vuln_summary}
-{exploit_summary}
+try to avoid "Bad value “\"en\"” for attribute “lang” on element “html”: The language subtag “\"en\"” is not a valid language subtag."
+try to avoid "“"” in an unquoted attribute value. Probable causes: Attributes running together or a URL query string in an unquoted attribute value."
+try to avoid Internal encoding declaration named an unsupported chararacter encoding “\"utf-8\"”.
+try to avoid "Element “head” is missing a required instance of child element “title”."
+you should avoid any error and issue 
 
-Vulnerabilities Found:
-{_format_vuln_list(op.get('issues', []))}
+prepared by CyberGuard Tool 
+your Info the report just from the data I give you. 
 
-CVEs: {', '.join(op.get('cves', ['None']))}
-
-Exploits: {_format_exploit_list(op.get('exploits', []))}
-
-Create a report with these sections:
-1. Executive Summary (150 words max)
-2. Technical Overview
-3. Risk Assessment  
-4. Key Findings (one section per major vulnerability)
-5. Remediation Plan
-6. Conclusion
-
-Use professional language appropriate for executives and technical staff.
-Base everything on the data provided above - do not invent details.
-Format cleanly in markdown without any formatting artifacts."""
+"""
 
 
-def _format_vuln_list(issues: List[str]) -> str:
-    """Format vulnerability list cleanly."""
-    if not issues:
-        return "No vulnerabilities identified"
-    
-    formatted = []
-    for i, issue in enumerate(issues[:10], 1):
-        # Clean up the issue text
-        clean_issue = issue.replace('\n', ' ').strip()
-        formatted.append(f"{i}. {clean_issue}")
-    
-    if len(issues) > 10:
-        formatted.append(f"... and {len(issues) - 10} additional issues")
-    
-    return "\n".join(formatted)
 
-
-def _format_exploit_list(exploits: List[str]) -> str:
-    """Format exploit list cleanly."""
-    if not exploits:
-        return "No successful exploits"
-    
-    formatted = []
-    for exploit in exploits[:5]:
-        clean_exploit = exploit.replace('\n', ' ').strip()
-        formatted.append(f"- {clean_exploit}")
-    
-    return "\n".join(formatted)
+    return professional_prompt.strip()
 
 

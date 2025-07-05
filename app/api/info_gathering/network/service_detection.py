@@ -1,44 +1,50 @@
-import asyncio
-import logging
+import asyncio, logging, re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def scan_open_services(ip: str, port_range="1-1000,5900,5432,8180,5432"):
-    logger.info(f"[scan_open_services] Starting Nmap scan for: {ip}")
+# --- helpers -----------------------------------------------------------
+IP_REGEX = re.compile(r'\b\d{1,3}(?:\.\d{1,3}){3}\b')
+
+def sanitize_target(raw: str) -> str:
+    """Extract the bare IP or hostname (strip parentheses, spaces)."""
+    ip_match = IP_REGEX.search(raw)
+    return ip_match.group(0) if ip_match else raw.split()[0]
+
+def dedup_ports(port_range: str) -> str:
+    ports = set(p.strip() for p in port_range.split(',') if p.strip())
+    return ','.join(sorted(ports, key=lambda x: (x.count('-'), x)))
+
+# --- main --------------------------------------------------------------
+async def scan_open_services(raw_target: str,
+                             port_range: str = "1-1000,5900,5432,8180,5432",
+                             timeout: int = 300) -> dict:
+    target = sanitize_target(raw_target)
+    ports = dedup_ports(port_range)
+
+    cmd = ["nmap", "-p", ports, "-sV", "-T4", "--open", "-Pn", target]
+    logger.info("[scan_open_services] command: %s", " ".join(cmd))
 
     try:
-        process = await asyncio.create_subprocess_exec(
-            "nmap", "-p", port_range, "-sV", "-T4", "--open", "--unprivileged", "-Pn", ip,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=120)
-
-        output = stdout.decode()
-        services = []
-
-        for line in output.splitlines():
-            if "/tcp" in line or "/udp" in line:
-                parts = line.split()
-                if len(parts) >= 3 and parts[1] == "open":
-                    port = parts[0]
-                    service = " ".join(parts[2:])
-                    services.append({"port": port, "service": service})
-
-        if not services:
-            logger.info(f"[scan_open_services] No open services found for {ip}")
-        else:
-            logger.info(f"[scan_open_services] Open services for {ip}: {services}")
-
-        return {"host": ip, "services": services}
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout)
 
     except asyncio.TimeoutError:
-        logger.error(f"[scan_open_services] Nmap scan timed out for {ip}")
-        return {"host": ip, "services": ["Timeout"]}
+        logger.error("[scan_open_services] timed out (%ds) for %s", timeout, target)
+        return {"host": target, "services": ["Timeout"]}
 
-    except Exception as e:
-        logger.error(f"[scan_open_services] Unexpected error for {ip}: {e}")
-        return {"host": ip, "services": [f"Exception: {e}"]}
+    # dump stderr so you can see resolution errors or warnings
+    if stderr:
+        logger.warning("[nmap stderr] %s", stderr.decode().strip())
 
+    services = []
+    for line in stdout.decode().splitlines():
+        if "/tcp" in line or "/udp" in line:
+            cols = line.split()
+            if len(cols) >= 3 and cols[1] == "open":
+                services.append({"port": cols[0], "service": " ".join(cols[2:])})
+
+    logger.info("[scan_open_services] %d services found on %s", len(services), target)
+    return {"host": target, "services": services or ["None"]}

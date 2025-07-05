@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, ValidationError, validator
 from app.api.models.information import NetworkInfoGathering
 from app.api.models.vuln_assessment import NetworkVulnerabilityAssessmentModel
 from app.api.models.vuln_exploiting import NetworkVulnerabilityExploitingModel
-from app.api.models.ai_collection import AI_RISK_REPORT
+from app.api.models.ai_collection import AiCollection
 
 __all__ = [
     "get_networktarget_data",
@@ -74,7 +74,7 @@ _FIELD_MAP: Dict[Any, Tuple[str, ...]] = {
     NetworkInfoGathering: ("target", "ip_address", "host"),
     NetworkVulnerabilityAssessmentModel: ("target", "ip_address", "host"),
     NetworkVulnerabilityExploitingModel: ("target", "ip_address", "host"),
-    AI_RISK_REPORT: ("target", "ip_address", "host"),
+    AiCollection: ("target", "ip_address", "host"),
 }
 
 
@@ -295,7 +295,7 @@ async def get_networktarget_data(ip_address: str) -> Dict[str, Any]:
         _find_doc(NetworkInfoGathering, ip_address),
         _find_doc(NetworkVulnerabilityAssessmentModel, ip_address),
         _find_doc(NetworkVulnerabilityExploitingModel, ip_address),
-        _find_doc(AI_RISK_REPORT, ip_address),
+        _find_doc(AiCollection, ip_address),
     )
 
     if not any([info, vuln, explo, risk]):
@@ -343,204 +343,6 @@ async def get_networktarget_data(ip_address: str) -> Dict[str, Any]:
             },
         },
     }
-
-
-def build_gemini_network_prompt(
-    operational: Union[Dict[str, Any], "NetworkOperationalData"],
-    cfg: "PromptConfig" | None = None,
-    risk_ai_data: Dict[str, Any] | None = None,
-) -> str:
-    """
-    Generate a professional network security report prompt that produces clean,
-    properly formatted markdown without formatting issues.
-    """
-    cfg = cfg or PromptConfig()
-    op: Dict[str, Any] = (
-        operational.dict() if isinstance(operational, NetworkOperationalData) else operational
-    )
-
-    # ── Report metadata ─────────────────────────────────────────
-    report_date = datetime.utcnow().strftime("%B %d, %Y")
-    report_id = f"NSR-{datetime.utcnow().strftime('%Y%m%d')}-{op['ip_address'].replace('.', '')[:8].upper()}"
-    
-    # ── Clean technical data formatting ──────────────────────────
-    tech_summary = _create_clean_network_summary(op, risk_ai_data)
-    
-    # ── Professional instruction prompt ──────────────────────────
-    professional_prompt = f"""You are a Senior Network Security Consultant creating an enterprise-grade network security assessment report.
-
-CRITICAL FORMATTING REQUIREMENTS:
-- Use ONLY proper markdown syntax
-- NO literal \\n characters in output
-- NO escaped characters or formatting artifacts
-- Clean, readable professional formatting
-- Proper spacing and line breaks
-
-TARGET INFORMATION:
-- IP Address: {op['ip_address']}
-- Hostname: {op['hostname']}
-- Report ID: {report_id}
-- Assessment Date: {report_date}
-- Overall Risk Score: {op['cvss']} ({_severity(op['cvss'], cfg)})
-- OS Detection: {op.get('os_detection', {}).get('name', 'Unknown')}
-
-TECHNICAL DATA TO USE:
-{tech_summary}
-
-CREATE A PROFESSIONAL REPORT FOLLOWING THIS EXACT STRUCTURE:
-
-# Network Security Assessment Report
-
-## Report Information
-| Field | Value |
-|-------|-------|
-| Target IP Address | {op['ip_address']} |
-| Hostname | {op['hostname']} |
-| Report ID | {report_id} |
-| Assessment Date | {report_date} |
-| Prepared By | CyberGuard Network Security Team |
-| Classification | CONFIDENTIAL |
-
----
-
-## Executive Summary
-
-Write a 150-word executive summary covering:
-- Network security posture assessment
-- Attack surface analysis
-- Number of vulnerabilities by severity
-- Key business risks identified
-- Priority recommendations
-
-## Assessment Overview
-
-### Scope
-Detail what network segments and services were tested.
-
-### Methodology
-Our assessment followed:
-- NIST Cybersecurity Framework
-- OWASP Network Security Testing Guide
-- Industry penetration testing standards
-
-### Tools & Timeline
-List primary tools (Nmap, Metasploit, custom scripts) and assessment duration.
-
-## Network Infrastructure Analysis
-
-### Host Information
-Present discovered host information in a clean table format.
-
-### Service Discovery
-Analyze open ports and running services.
-
-### Operating System Detection
-Detail OS fingerprinting results.
-
-## Risk Assessment Summary
-
-### Overall Risk Rating
-Provide clear risk rating with justification.
-
-### Vulnerability Summary
-| Severity | Count | CVSS Range | Priority |
-|----------|--------|------------|----------|
-| Critical | X | 9.0-10.0 | Immediate |
-| High | X | 7.0-8.9 | Urgent |
-| Medium | X | 4.0-6.9 | Important |
-| Low | X | 0.1-3.9 | Monitor |
-
-## Detailed Findings
-
-For each vulnerability found, create a section like this:
-
-### Finding X: [Vulnerability Name]
-
-**Severity:** [Level] | **CVSS:** [Score] | **Port:** [Port/Service]
-
-**Description:**
-Clear technical description of the vulnerability.
-
-**Business Impact:**
-Explain real-world consequences.
-
-**Technical Evidence:**
-```
-Include relevant technical proof
-```
-
-**Remediation:**
-1. Immediate actions required
-2. Long-term solutions needed
-
-## Exploitation Summary
-
-Detail any successful exploits and their impact.
-
-### Compromised Services
-If any services were successfully exploited, detail:
-- Attack vector used
-- Level of access gained
-- Data or systems compromised
-- Evidence obtained
-
-## Remediation Roadmap
-
-### Immediate Actions (0-30 days)
-List critical fixes for high-risk vulnerabilities.
-
-### Short-term Actions (30-90 days)
-List important security improvements.
-
-### Long-term Improvements (90+ days)
-List strategic network security enhancements.
-
-## Security Architecture Recommendations
-
-### Network Segmentation
-Recommend improved network isolation strategies.
-
-### Access Controls
-Suggest authentication and authorization improvements.
-
-### Monitoring & Detection
-Recommend network monitoring and intrusion detection systems.
-
-## Conclusion
-
-Summarize key findings and strategic recommendations for network security improvement.
-
-## Appendices
-
-### Technical Details
-Additional technical information and command outputs.
-
-### CVE References
-List all identified CVEs with descriptions.
-
-### Network Diagrams
-Include relevant network topology information.
-
----
-
-FORMATTING RULES YOU MUST FOLLOW:
-1. Use proper markdown headers (# ## ###)
-2. Create clean tables with proper alignment
-3. Use code blocks with language tags when appropriate
-4. NO literal \\n characters - use proper line breaks
-5. Keep consistent spacing throughout
-6. Use bullet points and numbered lists appropriately
-7. Include severity badges using text (Critical, High, Medium, Low)
-8. Make all content professional and readable
-
-Base ALL content on the technical data provided. Do NOT invent information.
-If data is missing, state "Information not available in current assessment."
-
-Create a clean, professional report that executives and technical teams can both understand and act upon."""
-
-    logger.debug(f"Clean professional network prompt generated for {op['ip_address']}")
-    return professional_prompt
-
 
 def _create_clean_network_summary(op: Dict[str, Any], risk_ai_data: Dict[str, Any] = None) -> str:
     """Create a clean, formatted network technical summary without formatting artifacts."""
@@ -604,76 +406,6 @@ def _create_clean_network_summary(op: Dict[str, Any], risk_ai_data: Dict[str, An
     return "\n".join(summary_parts)
 
 
-# Alternative simplified prompt for better results
-def build_simple_network_prompt(
-    operational: Union[Dict[str, Any], "NetworkOperationalData"],
-    cfg: "PromptConfig" | None = None,
-    risk_ai_data: Dict[str, Any] | None = None,
-) -> str:
-    """
-    Simplified version that focuses on clean output without complex formatting.
-    """
-    cfg = cfg or PromptConfig()
-    op: Dict[str, Any] = (
-        operational.dict() if isinstance(operational, NetworkOperationalData) else operational
-    )
-
-    # Simple, clean data presentation
-    vuln_summary = ""
-    if op.get('issues'):
-        vuln_summary = f"Found {len(op['issues'])} vulnerabilities"
-    
-    exploit_summary = ""
-    if op.get('exploits'):
-        exploit_summary = f"Successfully exploited {len(op['exploits'])} services"
-
-    services_list = ""
-    if op.get('services'):
-        services_list = ', '.join([f"{s.get('service', 'Unknown')} ({s.get('port', 'N/A')})" 
-                                  for s in op['services'][:5]])
-
-    return f"""Create a professional network security report in clean markdown format.
-
-STRICT FORMATTING REQUIREMENTS:
-- Use proper markdown syntax only
-- No escaped characters or \\n literals
-- Clean tables and headers
-- Professional business language
-
-REPORT DATA:
-IP Address: {op['ip_address']}
-Hostname: {op['hostname']}
-CVSS Score: {op['cvss']} ({_severity(op['cvss'], cfg)} severity)
-Operating System: {op.get('os_detection', {}).get('name', 'Unknown')}
-Open Ports: {len(op.get('open_ports', []))} ports
-Services: {services_list or 'None identified'}
-{vuln_summary}
-{exploit_summary}
-
-Vulnerabilities Found:
-{_format_network_vuln_list(op.get('issues', []))}
-
-CVEs: {', '.join(op.get('cves', ['None']))}
-
-Exploits: {_format_network_exploit_list(op.get('exploits', []))}
-
-Open Ports and Services:
-{_format_port_service_list(op.get('open_ports', []), op.get('services', []))}
-
-Create a report with these sections:
-1. Executive Summary (150 words max)
-2. Network Infrastructure Overview
-3. Risk Assessment  
-4. Key Findings (one section per major vulnerability)
-5. Exploitation Results
-6. Remediation Plan
-7. Conclusion
-
-Use professional language appropriate for executives and technical staff.
-Base everything on the data provided above - do not invent details.
-Format cleanly in markdown without any formatting artifacts."""
-
-
 def _format_network_vuln_list(issues: List[str]) -> str:
     """Format network vulnerability list cleanly."""
     if not issues:
@@ -691,40 +423,195 @@ def _format_network_vuln_list(issues: List[str]) -> str:
     return "\n".join(formatted)
 
 
-def _format_network_exploit_list(exploits: List[str]) -> str:
-    """Format network exploit list cleanly."""
-    if not exploits:
-        return "No successful exploits"
-    
-    formatted = []
-    for exploit in exploits[:5]:
-        clean_exploit = exploit.replace('\n', ' ').strip()
-        formatted.append(f"- {clean_exploit}")
-    
-    return "\n".join(formatted)
+
+def build_gemini_network_prompt(
+    operational: Union[Dict[str, Any], "NetworkOperationalData"],
+    cfg: "PromptConfig" | None = None,
+    risk_ai_data: Dict[str, Any] | None = None,
+) -> str:
+    """
+    Generate an enterprise-grade **HTML** prompt for a network security assessment
+    (was Markdown in the original version).
+    """
+    cfg = cfg or PromptConfig()
+    op: Dict[str, Any] = (
+        operational.dict() if isinstance(operational, NetworkOperationalData) else operational
+    )
+
+    # ─── Report metadata ────────────────────────────────────────────────────────
+    report_date = datetime.utcnow().strftime("%B %d, %Y")
+    report_id   = f"NSR-{datetime.utcnow().strftime('%Y%m%d')}-{op['ip_address'].replace('.', '')[:8].upper()}"
+
+    # ─── Technical data (already HTML-clean) ────────────────────────────────────
+    tech_summary = _create_clean_network_summary(op, risk_ai_data)
+
+    # ─── Assemble prompt in HTML ────────────────────────────────────────────────
+    professional_prompt = f"""
+OUTPUT RULES – READ CAREFULLY
+1. Reply with **ONLY** valid HTML for the report (no Markdown).
+2. Do **NOT** wrap the HTML in back-ticks or code fences.
+3. Do **NOT** add apologies, introductions, or closing remarks.
+4. Start with <article class="cyberguard-report"> and end with </article>.
+5. Write real line breaks, not JSON escapes (“\\n”).
+
+DESIGN GUIDELINES
+• Root wrapper: <article class="cyberguard-report prose prose-invert max-w-none"> … </article>.
+• Headings: h1 → 3xl bold, h2 → 2xl semibold, h3 → xl semibold, each with top margin.
+• Tables: class="min-w-full text-left border-collapse" + zebra rows (`odd:bg-slate-800`).
+• Code blocks: <pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto"><code>…</code></pre>.
+• Use Tailwind utility classes freely for spacing and readability.
+
+<!-- ————  BEGIN REPORT  ———— -->
+<article class="cyberguard-report prose prose-invert max-w-none">
+
+<h1 class="text-3xl font-bold">Network Security Assessment Report</h1>
+
+<h2 class="mt-8 text-2xl font-semibold">Report Information</h2>
+<table class="min-w-full text-left border-collapse">
+  <thead>
+    <tr><th>Field</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    <tr class="odd:bg-slate-800"><td>Target IP Address</td><td>{op['ip_address']}</td></tr>
+    <tr class="odd:bg-slate-800"><td>Hostname</td><td>{op['hostname']}</td></tr>
+    <tr class="odd:bg-slate-800"><td>Report&nbsp;ID</td><td>{report_id}</td></tr>
+    <tr class="odd:bg-slate-800"><td>Assessment Date</td><td>{report_date}</td></tr>
+    <tr class="odd:bg-slate-800"><td>Prepared&nbsp;By</td><td>CyberGuard&nbsp;Network&nbsp;Security&nbsp;Team</td></tr>
+    <tr class="odd:bg-slate-800"><td>Classification</td><td>CONFIDENTIAL</td></tr>
+  </tbody>
+</table>
+
+<hr/>
+
+<h2 class="mt-8 text-2xl font-semibold">Executive Summary</h2>
+<p><em>≈ 150 words covering:</em></p>
+<ul>
+  <li>Network security posture assessment</li>
+  <li>Attack surface analysis</li>
+  <li>Number of vulnerabilities by severity</li>
+  <li>Key business risks identified</li>
+  <li>Priority recommendations</li>
+</ul>
+
+<h2 class="mt-8 text-2xl font-semibold">Assessment Overview</h2>
+
+<h3 class="mt-6 text-xl font-semibold">Scope</h3>
+<p>Detail what network segments and services were tested.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Methodology</h3>
+<p>Our assessment followed:</p>
+<ul>
+  <li>NIST Cybersecurity Framework</li>
+  <li>OWASP Network Security Testing Guide</li>
+  <li>Industry penetration testing standards</li>
+</ul>
+
+<h3 class="mt-6 text-xl font-semibold">Tools &amp; Timeline</h3>
+<p>List primary tools (Nmap, Metasploit, custom scripts) and assessment duration.</p>
+
+<h2 class="mt-8 text-2xl font-semibold">Network Infrastructure Analysis</h2>
+<h3 class="mt-6 text-xl font-semibold">Host Information</h3>
+<p>Present discovered host information in a clean table.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Service Discovery</h3>
+<p>Analyze open ports and running services.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Operating System Detection</h3>
+<p>Detail OS fingerprinting results.</p>
+
+<h2 class="mt-8 text-2xl font-semibold">Risk Assessment Summary</h2>
+<h3 class="mt-6 text-xl font-semibold">Overall Risk Rating</h3>
+<p>Provide clear risk rating with justification.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Vulnerability Summary</h3>
+<table class="min-w-full text-left border-collapse">
+  <thead>
+    <tr>
+      <th>Severity</th><th>Count</th><th>CVSS Range</th><th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd:bg-slate-800"><td>Critical</td><td>X</td><td>9.0-10.0</td><td>Immediate</td></tr>
+    <tr class="odd:bg-slate-800"><td>High</td><td>X</td><td>7.0-8.9</td><td>Urgent</td></tr>
+    <tr class="odd:bg-slate-800"><td>Medium</td><td>X</td><td>4.0-6.9</td><td>Important</td></tr>
+    <tr class="odd:bg-slate-800"><td>Low</td><td>X</td><td>0.1-3.9</td><td>Monitor</td></tr>
+  </tbody>
+</table>
+
+<h2 class="mt-8 text-2xl font-semibold">Detailed Findings</h2>
+<p>For each vulnerability, create a section like this:</p>
+
+<h3 class="mt-6 text-xl font-semibold">Finding X: <span class="vuln-name">[Vulnerability&nbsp;Name]</span></h3>
+<p><strong>Severity:</strong> [Level] | <strong>CVSS:</strong> [Score] | <strong>Port:</strong> [Port/Service]</p>
+
+<p><strong>Description:</strong> Clear technical description of the vulnerability.</p>
+<p><strong>Business Impact:</strong> Explain real-world consequences.</p>
+
+<p><strong>Technical Evidence:</strong></p>
+<pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto"><code><!-- evidence --></code></pre>
+
+<p><strong>Remediation:</strong></p>
+<ol>
+  <li>Immediate actions required</li>
+  <li>Long-term solutions needed</li>
+</ol>
+
+<h2 class="mt-8 text-2xl font-semibold">Exploitation Summary</h2>
+<p>Detail any successful exploits and their impact.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Compromised Services</h3>
+<ul>
+  <li>Attack vector used</li>
+  <li>Level of access gained</li>
+  <li>Data or systems compromised</li>
+  <li>Evidence obtained</li>
+</ul>
+
+<h2 class="mt-8 text-2xl font-semibold">Remediation Roadmap</h2>
+
+<h3 class="mt-6 text-xl font-semibold">Immediate (0-30 days)</h3>
+<p>List critical fixes for high-risk vulnerabilities.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Short-term (30-90 days)</h3>
+<p>List important security improvements.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Long-term (90+ days)</h3>
+<p>List strategic network security enhancements.</p>
+
+<h2 class="mt-8 text-2xl font-semibold">Security Architecture Recommendations</h2>
+<h3 class="mt-6 text-xl font-semibold">Network Segmentation</h3>
+<p>Recommend improved network isolation strategies.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Access Controls</h3>
+<p>Suggest authentication and authorization improvements.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Monitoring &amp; Detection</h3>
+<p>Recommend network monitoring and intrusion detection systems.</p>
+
+<h2 class="mt-8 text-2xl font-semibold">Conclusion</h2>
+<p>Summarize key findings and strategic recommendations for network security improvement.</p>
+
+<h2 class="mt-8 text-2xl font-semibold">Appendices</h2>
+<h3 class="mt-6 text-xl font-semibold">Technical Details</h3>
+<p>Additional technical information and command outputs.</p>
+
+<h3 class="mt-6 text-xl font-semibold">CVE References</h3>
+<p>List all identified CVEs with descriptions.</p>
+
+<h3 class="mt-6 text-xl font-semibold">Network Diagrams</h3>
+<p>Include relevant network topology information.</p>
+
+<hr/>
+
+<!-- Injected technical data summary -->
+{tech_summary}
+
+</article>
+<!-- ————  END REPORT  ———— -->
+"""
 
 
-def _format_port_service_list(open_ports: List[Dict[str, Any]], services: List[Dict[str, Any]]) -> str:
-    """Format port and service information cleanly."""
-    if not open_ports:
-        return "No open ports detected"
-    
-    formatted = []
-    for port_info in open_ports[:10]:
-        port = port_info.get('port', 'N/A')
-        protocol = port_info.get('protocol', 'tcp')
-        service = port_info.get('service', 'unknown')
-        version = port_info.get('version', '')
-        
-        port_desc = f"Port {port}/{protocol}"
-        if service != 'unknown':
-            port_desc += f" - {service}"
-            if version:
-                port_desc += f" {version}"
-        
-        formatted.append(f"- {port_desc}")
-    
-    if len(open_ports) > 10:
-        formatted.append(f"... and {len(open_ports) - 10} additional ports")
-    
-    return "\n".join(formatted)
+    return professional_prompt.strip()
+
+
+
