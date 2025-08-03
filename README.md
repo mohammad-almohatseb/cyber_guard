@@ -90,9 +90,6 @@ graph TB
   
   ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
   
-  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyberguard-ptaas?style=social)
-  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyberguard-ptaas?style=social)
-  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyberguard-ptaas?style=social)
   
   **⭐ Created by [Mohammad Al-mohtaseb](mailto:mohammad.almohtaseb11@gmail.com) and [Omar Amarah](mailto:omaramara@gmail.com) 🛡️**
 </div>
