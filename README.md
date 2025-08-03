@@ -88,5 +88,4 @@ graph TB
   ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
   
 
-  **⭐ From [Mohammad Al-mohtaseb](https://github.com/mohammad-almohtaseb) with 🛡️**
-</div>
+**⭐ Created by [Mohammad Al-mohtaseb](mailto:mohammad.almohtaseb11@gmail.com) and [Omar Amara](mailto:omaramara@gmail.com) 🛡️**
