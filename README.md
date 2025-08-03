@@ -87,9 +87,6 @@ graph TB
   
   ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
   
-  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyber_guard?style=social)
-  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyber_guard?style=social)
-  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyber_guard?style=social)
-  
+
   **⭐ From [Mohammad Al-mohtaseb](https://github.com/mohammad-almohtaseb) with 🛡️**
 </div>
