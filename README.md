@@ -66,6 +66,8 @@ graph TB
     style I fill:#45b7d1
 ```
 
+---
+
 🔗 [GitHub - mohammad-almohtaseb/cyber_guard](https://github.com/mohammad-almohtaseb/cyber_guard)
 
 ---
@@ -75,6 +77,7 @@ graph TB
 <div align="center">
   
 [![Mohammad Al-mohtaseb](https://img.shields.io/badge/-Mohammad%20Al--mohtaseb-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/mohammad-al-mohtaseb-226134315)
+[![Omar Amarah](https://img.shields.io/badge/-Omar%20Amarah-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/omar-amarah-594499302/)
 [![Email](https://img.shields.io/badge/-Contact%20Us-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:mohammad.almohtaseb11@gmail.com)
 [![GitHub](https://img.shields.io/badge/-Follow%20Updates-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mohammad-almohtaseb)
   
@@ -87,5 +90,9 @@ graph TB
   
   ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
   
-
-**⭐ Created by [Mohammad Al-mohtaseb](mailto:mohammad.almohtaseb11@gmail.com) and [Omar Amara](mailto:omaramara@gmail.com) 🛡️**
+  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  
+  **⭐ Created by [Mohammad Al-mohtaseb](mailto:mohammad.almohtaseb11@gmail.com) and [Omar Amarah](mailto:omaramara@gmail.com) 🛡️**
+</div>
