@@ -66,32 +66,7 @@ graph TB
     style I fill:#45b7d1
 ```
 
----
-
-## 🚀 Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/mohammad-almohtaseb/cyberguard-ptaas.git
-cd cyberguard-ptaas
-
-# Setup your environment
-cp .env.example .env
-# Add your API keys
-
-# Run the platform
-docker-compose up -d
-
-# Access API: http://localhost:8000/docs
-```
-
----
-
-## 💡 Want to Learn More?
-
-📚 Full documentation, screenshots, and implementation details are available in the repo:
-
-🔗 [GitHub - mohammad-almohtaseb/cyberguard-ptaas](https://github.com/mohammad-almohtaseb/cyberguard-ptaas)
+🔗 [GitHub - mohammad-almohtaseb/cyber_guard](https://github.com/mohammad-almohtaseb/cyber_guard)
 
 ---
 
@@ -112,9 +87,9 @@ docker-compose up -d
   
   ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
   
-  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyberguard-ptaas?style=social)
-  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyberguard-ptaas?style=social)
-  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyber_guard?style=social)
+  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyber_guard?style=social)
+  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyber_guard?style=social)
   
   **⭐ From [Mohammad Al-mohtaseb](https://github.com/mohammad-almohtaseb) with 🛡️**
 </div>
