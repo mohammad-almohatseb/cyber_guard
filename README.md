@@ -6,244 +6,115 @@
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header&text=&fontSize=0&animation=twinkling"/>
 
-## 🎯 Overview
+## 🎯 Project Summary
 
-**CyberGuard PTaaS** is a scalable and intelligent **Penetration Testing as a Service** solution designed to perform comprehensive testing on **Web Applications** and **Network Infrastructure**. This platform combines traditional security testing techniques with advanced AI-driven analysis.
-
-* 🔐 **Mission:** Simplify enterprise-level penetration testing through automation
-* 🎯 **Scope:** Web applications, internal/external networks, and cloud
-* 🚀 **Edge:** AI-augmented vulnerability discovery and prioritization
-* 💡 **Vision:** Make real-time, intelligent security testing available to all
+**CyberGuard PTaaS** is our graduation project from **Philadelphia University's Cybersecurity program**, delivering a complete **Penetration Testing as a Service** platform for both **Web** and **Network** targets. The system follows a fully automated multi-phase testing pipeline, integrated with advanced AI models.
 
 ---
 
-## 🔄 Testing Pipeline
+## 🧪 Testing Lifecycle
 
-CyberGuard follows a robust **4-phase methodology**:
+CyberGuard operates in **5 key phases**:
 
-### Phase 1: 🔍 Reconnaissance
+### 1️⃣ Information Gathering
+* Network discovery, port scanning
+* Web reconnaissance & DNS analysis
 
-* Port & Service Enumeration (e.g., Nmap)
-* Technology Stack Identification
-* Subdomain & DNS Record Discovery
-* Public Exposure & Metadata Collection
+### 2️⃣ Vulnerability Assessment
+* Automated vulnerability scanning (CVE-based)
+* Static and dynamic analysis
 
-### Phase 2: 🔎 Vulnerability Assessment
+### 3️⃣ AI Analysis via **DeepSeek AI**
+* 📊 Generates a **Risk Score**
+* 🔍 Predicts **Expected Vulnerabilities** based on the collected data
 
-* CVE Matching and Signature-based Scans
-* Detection of Misconfigurations
-* Static and Dynamic Code Analysis
-* Weak Protocol & Service Identification
+### 4️⃣ Exploitation
+* CVE-based exploitation
+* Validating expected vulnerabilities
+* Eliminating false positives with real PoC
 
-### Phase 3: 🤖 AI-Powered Analysis (DeepSeek AI)
-
-* Contextual Risk Scoring
-* Predictive Vulnerability Identification
-* Attack Surface Modeling
-* Tailored Remediation Insights
-
-### Phase 4: 💥 Exploitation
-
-* Controlled CVE Exploits
-* Validate AI Predictions
-* Proof-of-Concept Evidence
-* Eliminate False Positives
+### 5️⃣ Gemini AI Report Generation
+* Comprehensive security assessment report via API
+* Professional documentation with actionable recommendations
 
 ---
 
-## 🏗️ Architecture Diagram
+## 🤖 AI Integration
+
+* **DeepSeek AI** → Risk scoring and vulnerability prediction
+* **Gemini AI** → Generates a detailed **Security Assessment Report** via API
+
+📁 All results are stored in a structured MongoDB document format per phase, pre-processed and filtered before report generation.
+
+---
+
+## ⚙️ Architecture Overview
 
 ```mermaid
-graph TD
-    A[Target] --> B[Recon Service]
-    B --> C[Vulnerability Engine]
-    C --> D[DeepSeek AI]
+graph TB
+    A[Target System] --> B[Information Gathering]
+    B --> C[Vulnerability Assessment]
+    C --> D[DeepSeek AI Analysis]
     D --> E[Exploitation Engine]
-    E --> F[MongoDB Storage]
-    F --> G[Gemini Report Generator]
-    G --> H[HTML / PDF Report]
+    E --> F[Database Storage]
+    F --> G[Report Generator]
+    G --> H[Gemini AI API]
+    H --> I[Final Security Report]
     
     style D fill:#ff6b6b
-    style G fill:#4ecdc4
-    style H fill:#45b7d1
+    style H fill:#4ecdc4
+    style I fill:#45b7d1
 ```
 
 ---
 
-## 🔧 Key Technologies
-
-### Backend
-
-* **FastAPI**: Async REST APIs, modular service endpoints
-* **MongoDB**: JSON document store for collected and processed results
-* **Docker**: Isolated service containers for scalable deployments
-
-### Security Tools
-
-* Nmap, OWASP ZAP, Burp Suite, Metasploit, WhatWeb
-
-### AI Integrations
-
-* **DeepSeek AI**: Predictive model for vulnerability insight
-* **Gemini AI**: Report post-processing and executive formatting
-
----
-
-## ⚙️ Setup & Deployment
-
-### Prerequisites
+## 🚀 Quick Start
 
 ```bash
-- Python 3.9+
-- Docker & Docker Compose
-- Git
-- MongoDB (optional local or cloud instance)
-```
-
-### Launch with Docker
-
-```bash
+# Clone the repository
 git clone https://github.com/mohammad-almohtaseb/cyberguard-ptaas.git
 cd cyberguard-ptaas
+
+# Setup your environment
 cp .env.example .env
-# Edit .env with keys and DB configs
+# Add your API keys
+
+# Run the platform
 docker-compose up -d
-```
 
-### Sample docker-compose.yml
-
-```yaml
-version: '3.8'
-services:
-  cyberguard-api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - MONGODB_URL=${MONGODB_URL}
-    depends_on:
-      - mongodb
-
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
+# Access API: http://localhost:8000/docs
 ```
 
 ---
 
-## 🚀 Usage Example
+## 💡 Want to Learn More?
 
-### Start a Scan
+📚 Full documentation, screenshots, and implementation details are available in the repo:
 
-```http
-POST /api/v1/scan/start
-{
-  "target": "example.com",
-  "scan_type": "comprehensive",
-  "modules": ["web", "network"]
-}
-```
-
-### Monitor Status
-
-```http
-GET /api/v1/scan/{scan_id}/status
-```
-
-### View AI Results
-
-```json
-{
-  "risk_score": 8.5,
-  "expected_vulnerabilities": [
-    "SQL Injection",
-    "Reflected XSS",
-    "Open Redirect"
-  ]
-}
-```
-
-### Download Final Report
-
-```http
-GET /api/v1/scan/{scan_id}/report
-# Returns PDF/HTML via Gemini AI
-```
+🔗 [GitHub - mohammad-almohtaseb/cyberguard-ptaas](https://github.com/mohammad-almohtaseb/cyberguard-ptaas)
 
 ---
 
-## 📊 Sample Risk Report
-
-```
-Target: example.com
-Risk Score: 8.5/10 (High)
-Duration: 2h 34m
-Vulnerabilities:
-  - Critical: 3
-  - High: 7
-  - Medium: 12
-  - Low: 8
-AI Accuracy: 85%
-False Positives Removed: 23
-```
-
----
-
-## 🎓 Academic Research
-
-* Developed as a graduation project at Philadelphia University
-* Combines CVE analysis, AI-based prediction, and real-world exploit testing
-* Benchmarked against OWASP Top 10 & industry tools
-
----
-
-## 🤝 Contribute
-
-### We welcome:
-
-* New scanning modules
-* Report templates or visualization tools
-* AI enhancements (risk scoring, classification)
-
-### To contribute:
-
-```bash
-git clone https://github.com/mohammad-almohtaseb/cyberguard-ptaas.git
-```
-
-Follow standard PR process.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License**.
-
-## ⚠️ Legal Notice
-
-Use **CyberGuard PTaaS** only on systems you are authorized to test.
-Unauthorized scanning is illegal and unethical.
-
----
-
-## 🌐 Contact
+## 👥 Team & Contact
 
 <div align="center">
-
-[![LinkedIn](https://img.shields.io/badge/-Mohammad%20Al--mohtaseb-0A66C2?style=for-the-badge\&logo=linkedin\&logoColor=white)](https://linkedin.com/in/mohammad-al-mohtaseb-226134315)
-[![Email](https://img.shields.io/badge/-Email%20Us-EA4335?style=for-the-badge\&logo=gmail\&logoColor=white)](mailto:mohammad.almohtaseb11@gmail.com)
-[![GitHub](https://img.shields.io/badge/-GitHub%20Repo-181717?style=for-the-badge\&logo=github\&logoColor=white)](https://github.com/mohammad-almohtaseb)
-
+  
+[![Mohammad Al-mohtaseb](https://img.shields.io/badge/-Mohammad%20Al--mohtaseb-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/mohammad-al-mohtaseb-226134315)
+[![Email](https://img.shields.io/badge/-Contact%20Us-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:mohammad.almohtaseb11@gmail.com)
+[![GitHub](https://img.shields.io/badge/-Follow%20Updates-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mohammad-almohtaseb)
+  
 </div>
 
 ---
 
 <div align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=footer&text=&fontSize=0&animation=twinkling"/>
-
-### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
-
+  
+  ### 🛡️ "Security is not a product, but a process. CyberGuard makes that process intelligent."
+  
+  ![Stars](https://img.shields.io/github/stars/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  ![Forks](https://img.shields.io/github/forks/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  ![Issues](https://img.shields.io/github/issues/mohammad-almohtaseb/cyberguard-ptaas?style=social)
+  
+  **⭐ From [Mohammad Al-mohtaseb](https://github.com/mohammad-almohtaseb) with 🛡️**
 </div>
