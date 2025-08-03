@@ -8,7 +8,7 @@
 
 ## 🎯 Project Summary
 
-**CyberGuard PTaaS** is our graduation project from **Philadelphia University's Cybersecurity program**, delivering a complete **Penetration Testing as a Service** platform for both **Web** and **Network** targets. The system follows a fully automated multi-phase testing pipeline, integrated with advanced AI models.
+**CyberGuard PTaaS** is a comprehensive Penetration Testing as a Service platform designed to assess both Web and Network targets. It operates through a fully automated, multi-phase testing pipeline integrated with advanced AI models for intelligent analysis and reporting.
 
 ---
 
